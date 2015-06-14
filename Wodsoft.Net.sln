@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wodsoft.Net", "Wodsoft.Net\Wodsoft.Net.csproj", "{FBEB3253-FDB7-4541-AC5C-019BC8FA7BE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wodsoft.Net.Test", "Wodsoft.Net.Test\Wodsoft.Net.Test.csproj", "{E721DF13-250A-468A-A0E4-A4EF04F661A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wodsoft.Net.UnitTest", "Wodsoft.Net.UnitTest\Wodsoft.Net.UnitTest.csproj", "{7F0A0BFA-6BF5-42D3-A4E3-94D519D6C74C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBEB3253-FDB7-4541-AC5C-019BC8FA7BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBEB3253-FDB7-4541-AC5C-019BC8FA7BE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBEB3253-FDB7-4541-AC5C-019BC8FA7BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBEB3253-FDB7-4541-AC5C-019BC8FA7BE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E721DF13-250A-468A-A0E4-A4EF04F661A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E721DF13-250A-468A-A0E4-A4EF04F661A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E721DF13-250A-468A-A0E4-A4EF04F661A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E721DF13-250A-468A-A0E4-A4EF04F661A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F0A0BFA-6BF5-42D3-A4E3-94D519D6C74C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F0A0BFA-6BF5-42D3-A4E3-94D519D6C74C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F0A0BFA-6BF5-42D3-A4E3-94D519D6C74C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F0A0BFA-6BF5-42D3-A4E3-94D519D6C74C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
