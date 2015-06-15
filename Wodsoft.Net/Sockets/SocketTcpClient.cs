@@ -15,7 +15,7 @@ namespace Wodsoft.Net.Sockets
     /// </summary>
     /// <typeparam name="TIn">输入类型。</typeparam>
     /// <typeparam name="TOut">输出类型。</typeparam>
-    public class SocketTcpClient<TIn, TOut> : SocketBase<TIn, TOut>
+    public class SocketTcpClient<TIn, TOut> : SocketTcpBase<TIn, TOut>
     {
         /// <summary>
         /// 实例化SocketTcpClient。

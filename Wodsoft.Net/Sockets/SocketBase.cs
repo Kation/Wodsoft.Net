@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -16,23 +14,15 @@ namespace Wodsoft.Net.Sockets
     /// </summary>
     /// <typeparam name="TIn">输入类型。</typeparam>
     /// <typeparam name="TOut">输出类型。</typeparam>
-    public abstract class SocketBase<TIn, TOut> : ISocket<TIn, TOut>, IDisposable
+    public abstract class SocketBase<TIn, TOut> : ISocket<TIn, TOut>
     {
         private SocketDataBag _DataBag;
 
         /// <summary>
-        /// 实例化TCP客户端。
+        /// 实例化Socket基类。
         /// </summary>
         /// <param name="socket">Socket套接字。</param>
-        /// <param name="socketHandler">Socket处理器。</param>
-        protected SocketBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler)
-            : this(socket, socketHandler, new SocketNetworkStreamProvider()) { }
-
-        /// <summary>
-        /// 实例化TCP客户端。
-        /// </summary>
-        /// <param name="socket">Socket套接字。</param>
-        /// <param name="socketHandler">Socket处理器。</param>
+        /// <param name="socketHandler">Socket处理者。</param>
         /// <param name="streamProvider">Socket网络流提供者。</param>
         protected SocketBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler, ISocketStreamProvider streamProvider)
         {
@@ -43,25 +33,19 @@ namespace Wodsoft.Net.Sockets
             if (streamProvider == null)
                 throw new ArgumentNullException("streamProvider");
             Socket = socket;
-            socket.NoDelay = true;
             Handler = socketHandler;
-            StreamProvider = streamProvider;
+            StreamProvider = StreamProvider;
         }
+        
+        /// <summary>
+        /// 获取Socket套接字。
+        /// </summary>
+        protected Socket Socket { get; private set; }
 
         /// <summary>
-        /// 获取Socket处理程序
+        /// 获取Socket处理者。
         /// </summary>
         public ISocketHandler<TIn, TOut> Handler { get; private set; }
-
-        /// <summary>
-        /// 获取Socket网络流提供者。
-        /// </summary>
-        public ISocketStreamProvider StreamProvider { get; private set; }
-
-        /// <summary>
-        /// 获取是否已连接。
-        /// </summary>
-        public bool IsConnected { get { return Socket.Connected; } }
 
         /// <summary>
         /// 获取Socket处理上下文。
@@ -69,10 +53,14 @@ namespace Wodsoft.Net.Sockets
         protected SocketHandlerContext<TIn, TOut> HandlerContext { get; private set; }
 
         /// <summary>
-        /// 获取Socket套接字。
+        /// 获取Socket网络流提供者。
         /// </summary>
-        protected Socket Socket { get; private set; }
+        public ISocketStreamProvider StreamProvider { get; private set; }
 
+        /// <summary>
+        /// 获取或设置Socket是否已连接。
+        /// </summary>
+        public bool IsConnected { get; protected set; }
 
         #region 初始化
 
@@ -82,13 +70,11 @@ namespace Wodsoft.Net.Sockets
         protected virtual void Initialize()
         {
             HandlerContext = new SocketHandlerContext<TIn, TOut>(StreamProvider.GetStream(Socket));
-            Task.Run((Func<Task>)ReceiveCycle);
         }
 
         protected virtual async Task InitializeAsync()
         {
             HandlerContext = new SocketHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket));
-            await ReceiveCycle();
         }
 
         protected virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
@@ -108,7 +94,6 @@ namespace Wodsoft.Net.Sockets
             HandlerContext = new SocketHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar));
             asyncResult.IsCompleted = true;
             asyncResult.CompletedSynchronously = true;
-            Task.Run((Func<Task>)ReceiveCycle);
             if (asyncState.AsyncCallback != null)
                 asyncState.AsyncCallback(asyncResult);
             ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
@@ -126,54 +111,16 @@ namespace Wodsoft.Net.Sockets
         /// <summary>
         /// 断开与服务器的连接。
         /// </summary>
-        public void Disconnect()
-        {
-            //判断是否已连接
-            if (!IsConnected)
-                throw new SocketException(10057);
-            Socket.Disconnect(false);
-            Disconnected(true);
-        }
+        public abstract void Disconnect();
 
         /// <summary>
         /// 异步断开与服务器的连接。
         /// </summary>
-        public async Task DisconnectAsync()
-        {
-            //判断是否已连接
-            if (!IsConnected)
-                throw new SocketException(10057);
-            await Task.Factory.FromAsync(Socket.BeginDisconnect(true, null, null), Socket.EndDisconnect);
-            Disconnected(true);
-        }
+        public abstract Task DisconnectAsync();
 
-        public IAsyncResult BeginDisconnect(AsyncCallback callback, object state)
-        {
-            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
-            SocketAsyncState asyncState = new SocketAsyncState();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            Socket.BeginDisconnect(true, EndBeginDisconnect, asyncState);
-            return asyncResult;
-        }
+        public abstract IAsyncResult BeginDisconnect(AsyncCallback callback, object state);
 
-        public void EndDisconnect(IAsyncResult ar)
-        {
-
-        }
-
-        private void EndBeginDisconnect(IAsyncResult ar)
-        {
-            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
-            SocketAsyncResult asyncResult = (SocketAsyncResult)state.AsyncResult;
-            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
-            asyncResult.IsCompleted = true;
-            Socket.EndDisconnect(ar);
-            Disconnected(true);
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            if (state.AsyncCallback != null)
-                state.AsyncCallback(asyncResult);
-        }
+        public abstract void EndDisconnect(IAsyncResult ar);
 
         /// <summary>
         /// 断开连接后调用的方法。
@@ -181,6 +128,7 @@ namespace Wodsoft.Net.Sockets
         /// <param name="raiseEvent">是否触发事件。</param>
         protected void Disconnected(bool raiseEvent)
         {
+            HandlerContext = null;
             if (raiseEvent && DisconnectCompleted != null)
                 DisconnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Disconnect));
         }
@@ -276,10 +224,7 @@ namespace Wodsoft.Net.Sockets
             asyncResult.Data = success;
             asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
             asyncResult.IsCompleted = true;
-            if (!success)
-                Disconnected(true);
-
-            if (SendCompleted != null)
+            if (success && SendCompleted != null)
                 SendCompleted(this, new SocketEventArgs<TIn>(state.Data, SocketAsyncOperation.Send));
             ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
             if (state.AsyncCallback != null)
@@ -422,39 +367,23 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         public void Dispose()
         {
-            lock (this)
-            {
-                if (IsConnected)
-                    Socket.Disconnect(false);
-                Socket.Close();
-            }
+            Disposed();
+        }
+
+        protected virtual void Disposed()
+        {
+
         }
 
         /// <summary>
         /// 获取远程终结点地址。
         /// </summary>
-        public IPEndPoint RemoteEndPoint
-        {
-            get
-            {
-                if (IsConnected)
-                    return (IPEndPoint)Socket.RemoteEndPoint;
-                return null;
-            }
-        }
+        public abstract IPEndPoint RemoteEndPoint { get; }
 
         /// <summary>
         /// 获取本地终结点地址。
         /// </summary>
-        public IPEndPoint LocalEndPoint
-        {
-            get
-            {
-                if (IsConnected)
-                    return (IPEndPoint)Socket.LocalEndPoint;
-                return null;
-            }
-        }
+        public abstract IPEndPoint LocalEndPoint { get; }
 
         #endregion
     }

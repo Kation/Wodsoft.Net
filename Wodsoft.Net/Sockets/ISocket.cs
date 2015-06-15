@@ -111,6 +111,11 @@ namespace Wodsoft.Net.Sockets
         /// <returns>收到的数据。</returns>
         TOut EndReceive(IAsyncResult ar);
         /// <summary>
+        /// 循环接收数据。
+        /// </summary>
+        /// <returns></returns>
+        Task ReceiveCycle();
+        /// <summary>
         /// 接收完成时引发事件。
         /// </summary>
         event EventHandler<SocketEventArgs<TOut>> ReceiveCompleted;

@@ -33,7 +33,7 @@ namespace Wodsoft.Net.Sockets
                 return false;
             return ProcessReceiveContent(context);
         }
-                
+
         public IAsyncResult BeginReceive(SocketHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
         {
             //context不能为null
@@ -149,6 +149,15 @@ namespace Wodsoft.Net.Sockets
             }
             else
             {
+                if (state.Context.ReceiveContext.IsFailed)
+                {
+                    state.AsyncResult.IsCompleted = true;
+                    state.AsyncResult.IsSuccess = false;
+                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
+                    if (state.AsyncCallBack != null)
+                        state.AsyncCallBack(state.AsyncResult);
+                    return;
+                }
                 try
                 {
                     state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadHead, state);
@@ -161,7 +170,7 @@ namespace Wodsoft.Net.Sockets
                     if (state.AsyncCallBack != null)
                         state.AsyncCallBack(state.AsyncResult);
                     return;
-                }            
+                }
             }
         }
 
@@ -204,6 +213,15 @@ namespace Wodsoft.Net.Sockets
             }
             else
             {
+                if (state.Context.ReceiveContext.IsFailed)
+                {
+                    state.AsyncResult.IsCompleted = true;
+                    state.AsyncResult.IsSuccess = false;
+                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
+                    if (state.AsyncCallBack != null)
+                        state.AsyncCallBack(state.AsyncResult);
+                    return;
+                }
                 try
                 {
                     state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadContent, state);
@@ -261,6 +279,11 @@ namespace Wodsoft.Net.Sockets
                         return default(TOut);
                     }
                     headProcessCompleted = ProcessReceiveHead(context.ReceiveContext);
+                    if (context.ReceiveContext.IsFailed)
+                    {
+                        context.ReceiveContext.Reset();
+                        return default(TOut);
+                    }
                 }
             }
             bool contentProcessCompleted = CheckContentCompleted(context.ReceiveContext);
@@ -288,6 +311,11 @@ namespace Wodsoft.Net.Sockets
                         return default(TOut);
                     }
                     contentProcessCompleted = ProcessReceiveContent(context.ReceiveContext);
+                    if (context.ReceiveContext.IsFailed)
+                    {
+                        context.ReceiveContext.Reset();
+                        return default(TOut);
+                    }
                 }
             }
             TOut value = context.ReceiveContext.Result;
@@ -308,16 +336,29 @@ namespace Wodsoft.Net.Sockets
                 long position;
                 while (!headProcessCompleted)
                 {
-                    int length = await context.Stream.ReadAsync(buffer, 0, HeadBufferLength);
-                    if (length == 0)
+                    try
                     {
+                        int length = await context.Stream.ReadAsync(buffer, 0, HeadBufferLength);
+                        if (length == 0)
+                        {
+                            return default(TOut);
+                        }
+                        position = context.ReceiveContext.Buffer.Position;
+                        context.ReceiveContext.Buffer.Position = context.ReceiveContext.Buffer.Length;
+                        context.ReceiveContext.Buffer.Write(buffer, 0, length);
+                        context.ReceiveContext.Buffer.Position = position;
+                    }
+                    catch
+                    {
+                        context.ReceiveContext.Reset();
                         return default(TOut);
                     }
-                    position = context.ReceiveContext.Buffer.Position;
-                    context.ReceiveContext.Buffer.Position = context.ReceiveContext.Buffer.Length;
-                    context.ReceiveContext.Buffer.Write(buffer, 0, length);
-                    context.ReceiveContext.Buffer.Position = position;
                     headProcessCompleted = ProcessReceiveHead(context.ReceiveContext);
+                    if (context.ReceiveContext.IsFailed)
+                    {
+                        context.ReceiveContext.Reset();
+                        return default(TOut);
+                    }
                 }
             }
             bool contentProcessCompleted = CheckContentCompleted(context.ReceiveContext);
@@ -327,16 +368,29 @@ namespace Wodsoft.Net.Sockets
                 long position;
                 while (!contentProcessCompleted)
                 {
-                    int length = await context.Stream.ReadAsync(buffer, 0, ContentBufferLength);
-                    if (length == 0)
+                    try
                     {
+                        int length = await context.Stream.ReadAsync(buffer, 0, ContentBufferLength);
+                        if (length == 0)
+                        {
+                            return default(TOut);
+                        }
+                        position = context.ReceiveContext.Buffer.Position;
+                        context.ReceiveContext.Buffer.Position = context.ReceiveContext.Buffer.Length;
+                        context.ReceiveContext.Buffer.Write(buffer, 0, length);
+                        context.ReceiveContext.Buffer.Position = position;
+                    }
+                    catch
+                    {
+                        context.ReceiveContext.Reset();
                         return default(TOut);
                     }
-                    position = context.ReceiveContext.Buffer.Position;
-                    context.ReceiveContext.Buffer.Position = context.ReceiveContext.Buffer.Length;
-                    context.ReceiveContext.Buffer.Write(buffer, 0, length);
-                    context.ReceiveContext.Buffer.Position = position;
                     contentProcessCompleted = ProcessReceiveContent(context.ReceiveContext);
+                    if (context.ReceiveContext.IsFailed)
+                    {
+                        context.ReceiveContext.Reset();
+                        return default(TOut);
+                    }
                 }
             }
             TOut value = context.ReceiveContext.Result;
@@ -359,7 +413,7 @@ namespace Wodsoft.Net.Sockets
 
 
             SocketHandlerAsyncResult<TIn, TOut> result = new SocketHandlerAsyncResult<TIn, TOut>(context, state);
-            
+
             SocketHandlerState handlerState = new SocketHandlerState();
             handlerState.Context = context;
             handlerState.AsyncResult = result;
@@ -433,7 +487,7 @@ namespace Wodsoft.Net.Sockets
             {
                 state.AsyncResult.IsSuccess = false;
             }
-                state.AsyncResult.IsCompleted = true;
+            state.AsyncResult.IsCompleted = true;
             if (state.AsyncCallBack != null)
                 state.AsyncCallBack(state.AsyncResult);
             ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();

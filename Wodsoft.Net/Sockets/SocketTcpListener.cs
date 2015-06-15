@@ -116,7 +116,7 @@ namespace Wodsoft.Net.Sockets
             {
                 if (!IsStarted)
                     throw new InvalidOperationException("没有开始服务。");
-                foreach (var client in clients)
+                foreach (var client in clients.ToArray())
                 {
                     client.Disconnect();
                     client.DisconnectCompleted -= client_DisconnectCompleted;
@@ -140,7 +140,7 @@ namespace Wodsoft.Net.Sockets
         //客户端断开连接
         private void client_DisconnectCompleted(object sender, SocketEventArgs e)
         {
-            SocketBase<TIn, TOut> client = (SocketBase<TIn, TOut>)sender;
+            SocketTcpBase<TIn, TOut> client = (SocketTcpBase<TIn, TOut>)sender;
 
             //移除客户端
             lock (clients)

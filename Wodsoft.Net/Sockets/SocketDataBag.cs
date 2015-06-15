@@ -107,7 +107,8 @@ namespace Wodsoft.Net.Sockets
 
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            return _Dictionary.TryGetValue(binder.Name, out result);
+            _Dictionary.TryGetValue(binder.Name, out result);
+            return true;
         }
 
         public override bool TrySetMember(SetMemberBinder binder, object value)

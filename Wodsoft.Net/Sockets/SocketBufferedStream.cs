@@ -251,6 +251,8 @@ namespace Wodsoft.Net.Sockets
                         if (correct == values.Length)
                             return position - correct + 1;
                     }
+                    else
+                        correct = 0;
                     position++;
                     if (position == Length)
                         goto End;

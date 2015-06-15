@@ -39,14 +39,35 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Http\HttpRequestSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Http\HttpResponseSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Http\HttpSocketHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Http\HttpSocketHandler.cs" />
+    <Compile Include="Protocol\Command.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Protocol\Package.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Protocol\PackageHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Protocol\ProtocolManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\ISocket.cs" />
     <Compile Include="Sockets\ISocketHandler.cs" />
     <Compile Include="Sockets\ISocketStreamProvider.cs" />
     <Compile Include="Sockets\SocketAsyncResult.cs" />
     <Compile Include="Sockets\SocketAsyncState.cs" />
     <Compile Include="Sockets\SocketBase.cs" />
+    <Compile Include="Sockets\SocketTcpBase.cs" />
     <Compile Include="Sockets\SocketBufferedStream.cs" />
     <Compile Include="Sockets\SocketDataBag.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs" />
@@ -63,10 +84,12 @@
     <Compile Include="Sockets\SocketSendContext.cs" />
     <Compile Include="Sockets\SocketTcpClient.cs" />
     <Compile Include="Sockets\SocketTcpListener.cs" />
+    <Compile Include="Sockets\SocketUdpBase.cs" />
+    <Compile Include="Sockets\SocketUdpClient.cs" />
+    <Compile Include="Sockets\SocketUdpListener.cs" />
+    <Compile Include="Sockets\SocketUdpStream.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Protocol\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

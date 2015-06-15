@@ -21,6 +21,8 @@ namespace Wodsoft.Net.Sockets
 
         public dynamic DataBag { get; private set; }
 
+        public bool IsFailed { get; set; }
+
         public void CheckQueue()
         {
             while (true)
@@ -103,6 +105,7 @@ namespace Wodsoft.Net.Sockets
         {
             DataBag.Clear();
             _WorkStatus = false;
+            IsFailed = false;
             _Event.Set();
         }
     }
