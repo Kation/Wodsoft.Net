@@ -21,9 +21,8 @@ namespace Wodsoft.Net.Sockets
         /// 实例化SocketTcpClient。
         /// </summary>
         /// <param name="handler">Socket处理器。</param>
-        /// <param name="ipv6">是否使用IPv6协议，否则为IPv4。</param>
-        public SocketTcpClient(ISocketHandler<TIn, TOut> handler, bool ipv6 = false)
-            : base(new Socket(SocketType.Stream, ipv6 ? ProtocolType.IPv6 : ProtocolType.IPv4), handler)
+        public SocketTcpClient(ISocketHandler<TIn, TOut> handler)
+            : base(new Socket(SocketType.Stream, ProtocolType.Tcp), handler)
         {
 
         }
@@ -38,80 +37,129 @@ namespace Wodsoft.Net.Sockets
         {
             Initialize();
         }
-        
+
         #region 连接
 
         /// <summary>
         /// 连接至服务器。
         /// </summary>
-        /// <param name="endpoint">服务器终结点。</param>
-        public void Connect(IPEndPoint endpoint)
+        /// <param name="endPoint">服务器终结点。</param>
+        public bool Connect(IPEndPoint endPoint)
         {
             //判断是否已连接
             if (IsConnected)
                 throw new InvalidOperationException("已连接至服务器。");
-            if (endpoint == null)
-                throw new ArgumentNullException("endpoint");
-            //锁定自己，避免多线程同时操作
-            lock (this)
+            if (endPoint == null)
+                throw new ArgumentNullException("endPoint");
+
+            try
             {
-                SocketAsyncState<TOut> state = new SocketAsyncState<TOut>();
-                //Socket异步连接
-                Socket.BeginConnect(endpoint, EndConnect, state).AsyncWaitHandle.WaitOne();
-                //等待异步全部处理完成
-                while (!state.Completed)
-                {
-                    Thread.Sleep(1);
-                }
+                Socket.Connect(endPoint);
+                if (ConnectCompleted != null)
+                    ConnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Connect));
+                Initialize();
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
         /// <summary>
         /// 异步连接至服务器。
         /// </summary>
-        /// <param name="endpoint"></param>
-        public void ConnectAsync(IPEndPoint endpoint)
+        /// <param name="endPoint"></param>
+        public async Task<bool> ConnectAsync(IPEndPoint endPoint)
         {
             //判断是否已连接
             if (IsConnected)
                 throw new InvalidOperationException("已连接至服务器。");
-            if (endpoint == null)
-                throw new ArgumentNullException("endpoint");
-            //锁定自己，避免多线程同时操作
-            lock (this)
-            {
-                SocketAsyncState<TOut> state = new SocketAsyncState<TOut>();
-                //设置状态为异步
-                state.IsAsync = true;
-                //Socket异步连接
-                Socket.BeginConnect(endpoint, EndConnect, state);
-            }
-        }
-
-        private void EndConnect(IAsyncResult result)
-        {
-            SocketAsyncState<TOut> state = (SocketAsyncState<TOut>)result.AsyncState;
+            if (endPoint == null)
+                throw new ArgumentNullException("endPoint");
 
             try
             {
-                Socket.EndConnect(result);
+                await Task.Factory.FromAsync(Socket.BeginConnect(endPoint, null, null), Socket.EndConnect);
+                if (ConnectCompleted != null)
+                    ConnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Connect));
+                await InitializeAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public IAsyncResult BeginConnect(IPEndPoint endPoint, AsyncCallback callback, object state)
+        {
+            //判断是否已连接
+            if (IsConnected)
+                throw new InvalidOperationException("已连接至服务器。");
+            if (endPoint == null)
+                throw new ArgumentNullException("endPoint");
+
+            SocketAsyncResult<bool> asyncResult = new SocketAsyncResult<bool>(state);
+            SocketAsyncState asyncState = new SocketAsyncState();
+            asyncState.AsyncCallback = callback;
+            asyncState.AsyncResult = asyncResult;
+            try
+            {
+                Socket.BeginConnect(endPoint, EndBeginConnect, asyncState);
+            }
+            catch
+            {
+                asyncResult.CompletedSynchronously = true;
+                asyncResult.IsCompleted = true;
+                asyncResult.Data = false;
+                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+                if (callback != null)
+                    callback(asyncResult);
+            }
+            return asyncResult;
+        }
+
+        public bool EndConnect(IAsyncResult ar)
+        {
+            SocketAsyncResult<bool> asyncResult = ar as SocketAsyncResult<bool>;
+            if (asyncResult == null)
+                throw new ArgumentNullException("异步结果不属于该Socket。");
+            return asyncResult.Data;
+        }
+
+        private void EndBeginConnect(IAsyncResult ar)
+        {
+            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
+            SocketAsyncResult<bool> asyncResult = (SocketAsyncResult<bool>)state.AsyncResult;
+            try
+            {
+                Socket.EndConnect(ar);
+                BeginInitialize(EndBeginInitialize, state);
+
             }
             catch
             {
                 //出现异常，连接失败。
-                state.Completed = true;
-                //判断是否为异步，异步则引发事件
-                if (state.IsAsync && ConnectCompleted != null)
-                    ConnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Connect));
-                return;
+                asyncResult.Data = false;
+                asyncResult.IsCompleted = true;
+                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+                if (state.AsyncCallback != null)
+                    state.AsyncCallback(asyncResult);
             }
-            Initialize();
-            //连接完成
-            state.Completed = true;
-            if (state.IsAsync && ConnectCompleted != null)
-            {
+        }
+
+        private void EndBeginInitialize(IAsyncResult ar)
+        {
+            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
+            SocketAsyncResult<bool> asyncResult = (SocketAsyncResult<bool>)state.AsyncResult;
+            asyncResult.IsCompleted = true;
+            asyncResult.Data = true;
+            if (ConnectCompleted != null)
                 ConnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Connect));
-            }
+            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            if (state.AsyncCallback != null)
+                state.AsyncCallback(asyncResult);
         }
 
         #endregion

@@ -51,6 +51,9 @@
     <Compile Include="Sockets\SocketDataBag.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs" />
     <Compile Include="Sockets\SocketHandler16.cs" />
+    <Compile Include="Sockets\SocketHandler32.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\SocketHandlerAsyncResult.cs" />
     <Compile Include="Sockets\SocketHandlerContext.cs" />
     <Compile Include="Sockets\SocketHeadContentHandler.cs" />

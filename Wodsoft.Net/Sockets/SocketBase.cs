@@ -6,114 +6,180 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
+    /// <summary>
+    /// Socket基类。
+    /// </summary>
+    /// <typeparam name="TIn">输入类型。</typeparam>
+    /// <typeparam name="TOut">输出类型。</typeparam>
     public abstract class SocketBase<TIn, TOut> : ISocket<TIn, TOut>, IDisposable
     {
-        protected SocketHandlerContext<TIn, TOut> HandlerContext { get; private set; }
-
-        protected Socket Socket { get; private set; }
+        private SocketDataBag _DataBag;
 
         /// <summary>
         /// 实例化TCP客户端。
         /// </summary>
+        /// <param name="socket">Socket套接字。</param>
+        /// <param name="socketHandler">Socket处理器。</param>
         protected SocketBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler)
+            : this(socket, socketHandler, new SocketNetworkStreamProvider()) { }
+
+        /// <summary>
+        /// 实例化TCP客户端。
+        /// </summary>
+        /// <param name="socket">Socket套接字。</param>
+        /// <param name="socketHandler">Socket处理器。</param>
+        /// <param name="streamProvider">Socket网络流提供者。</param>
+        protected SocketBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler, ISocketStreamProvider streamProvider)
         {
             if (socket == null)
                 throw new ArgumentNullException("socket");
             if (socketHandler == null)
                 throw new ArgumentNullException("socketHandler");
+            if (streamProvider == null)
+                throw new ArgumentNullException("streamProvider");
             Socket = socket;
             socket.NoDelay = true;
             Handler = socketHandler;
-            //HandlerContext = new SocketHandlerContext<TIn, TOut>();
+            StreamProvider = streamProvider;
         }
 
         /// <summary>
-        /// Socket处理程序
+        /// 获取Socket处理程序
         /// </summary>
         public ISocketHandler<TIn, TOut> Handler { get; private set; }
+
+        /// <summary>
+        /// 获取Socket网络流提供者。
+        /// </summary>
+        public ISocketStreamProvider StreamProvider { get; private set; }
 
         /// <summary>
         /// 获取是否已连接。
         /// </summary>
         public bool IsConnected { get { return Socket.Connected; } }
 
-        protected void Initialize()
-        {
-            HandlerContext = new SocketHandlerContext<TIn, TOut>(GetNetworkStream());
+        /// <summary>
+        /// 获取Socket处理上下文。
+        /// </summary>
+        protected SocketHandlerContext<TIn, TOut> HandlerContext { get; private set; }
 
-            SocketAsyncState<TOut> state = new SocketAsyncState<TOut>();
-            //开始接收数据
-            Handler.BeginReceive(HandlerContext, EndReceive, state);
+        /// <summary>
+        /// 获取Socket套接字。
+        /// </summary>
+        protected Socket Socket { get; private set; }
+
+
+        #region 初始化
+
+        /// <summary>
+        /// 初始化Socket连接。调用于Socket连接建立后。
+        /// </summary>
+        protected virtual void Initialize()
+        {
+            HandlerContext = new SocketHandlerContext<TIn, TOut>(StreamProvider.GetStream(Socket));
+            Task.Run((Func<Task>)ReceiveCycle);
         }
 
-        protected virtual Stream GetNetworkStream()
+        protected virtual async Task InitializeAsync()
         {
-            return new NetworkStream(Socket);
+            HandlerContext = new SocketHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket));
+            await ReceiveCycle();
         }
+
+        protected virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
+        {
+            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
+            SocketAsyncState asyncState = new SocketAsyncState();
+            asyncState.AsyncCallback = callback;
+            asyncState.AsyncResult = asyncResult;
+            StreamProvider.BeginGetStream(Socket, EndGetStream, asyncState);
+            return asyncResult;
+        }
+
+        private void EndGetStream(IAsyncResult ar)
+        {
+            SocketAsyncState asyncState = (SocketAsyncState)ar.AsyncState;
+            SocketAsyncResult asyncResult = (SocketAsyncResult)asyncState.AsyncResult;
+            HandlerContext = new SocketHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar));
+            asyncResult.IsCompleted = true;
+            asyncResult.CompletedSynchronously = true;
+            Task.Run((Func<Task>)ReceiveCycle);
+            if (asyncState.AsyncCallback != null)
+                asyncState.AsyncCallback(asyncResult);
+            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+        }
+
+        protected virtual void EndInitialize(IAsyncResult ar)
+        {
+
+        }
+
+        #endregion
 
         #region 断开连接
 
         /// <summary>
         /// 断开与服务器的连接。
         /// </summary>
-        public virtual void Disconnect()
+        public void Disconnect()
         {
             //判断是否已连接
             if (!IsConnected)
                 throw new SocketException(10057);
-            lock (this)
-            {
-                //Socket异步断开并等待完成
-                try
-                {
-                    Socket.BeginDisconnect(true, EndDisconnect, true).AsyncWaitHandle.WaitOne();
-                }
-                catch
-                {
-
-                }
-            }
+            Socket.Disconnect(false);
+            Disconnected(true);
         }
 
         /// <summary>
         /// 异步断开与服务器的连接。
         /// </summary>
-        public virtual void DisconnectAsync()
+        public async Task DisconnectAsync()
         {
             //判断是否已连接
             if (!IsConnected)
                 throw new SocketException(10057);
-            lock (this)
-            {
-                //Socket异步断开
-                Socket.BeginDisconnect(true, EndDisconnect, false);
-            }
+            await Task.Factory.FromAsync(Socket.BeginDisconnect(true, null, null), Socket.EndDisconnect);
+            Disconnected(true);
         }
 
-        private void EndDisconnect(IAsyncResult result)
+        public IAsyncResult BeginDisconnect(AsyncCallback callback, object state)
         {
-            try
-            {
-                Socket.EndDisconnect(result);
-            }
-            catch
-            {
-
-            }
-            //是否同步
-            bool sync = (bool)result.AsyncState;
-
-            if (!sync && DisconnectCompleted != null)
-            {
-                DisconnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Disconnect));
-            }
+            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
+            SocketAsyncState asyncState = new SocketAsyncState();
+            asyncState.AsyncCallback = callback;
+            asyncState.AsyncResult = asyncResult;
+            Socket.BeginDisconnect(true, EndBeginDisconnect, asyncState);
+            return asyncResult;
         }
 
-        //这是一个给收发异常准备的断开引发事件方法
-        private void Disconnected(bool raiseEvent)
+        public void EndDisconnect(IAsyncResult ar)
+        {
+
+        }
+
+        private void EndBeginDisconnect(IAsyncResult ar)
+        {
+            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
+            SocketAsyncResult asyncResult = (SocketAsyncResult)state.AsyncResult;
+            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
+            asyncResult.IsCompleted = true;
+            Socket.EndDisconnect(ar);
+            Disconnected(true);
+            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            if (state.AsyncCallback != null)
+                state.AsyncCallback(asyncResult);
+        }
+
+        /// <summary>
+        /// 断开连接后调用的方法。
+        /// </summary>
+        /// <param name="raiseEvent">是否触发事件。</param>
+        protected void Disconnected(bool raiseEvent)
         {
             if (raiseEvent && DisconnectCompleted != null)
                 DisconnectCompleted(this, new SocketEventArgs(SocketAsyncOperation.Disconnect));
@@ -127,7 +193,7 @@ namespace Wodsoft.Net.Sockets
         /// 发送数据。
         /// </summary>
         /// <param name="data">要发送的数据。</param>
-        public void Send(TIn data)
+        public bool Send(TIn data)
         {
             //是否已连接
             if (!IsConnected)
@@ -138,14 +204,23 @@ namespace Wodsoft.Net.Sockets
 
             //开始发送数据
             if (!Handler.Send(data, HandlerContext))
+            {
                 Disconnected(true);
+                return false;
+            }
+            else
+            {
+                if (SendCompleted != null)
+                    SendCompleted(this, new SocketEventArgs<TIn>(data, SocketAsyncOperation.Send));
+                return true;
+            }
         }
 
         /// <summary>
         /// 异步发送数据。
         /// </summary>
         /// <param name="data">要发送的数据。</param>
-        public void SendAsync(TIn data)
+        public async Task<bool> SendAsync(TIn data)
         {
             //是否已连接
             if (!IsConnected)
@@ -154,62 +229,157 @@ namespace Wodsoft.Net.Sockets
             if (data == null)
                 throw new ArgumentNullException("data");
 
-            //设置异步状态
-            SocketAsyncState<TIn> state = new SocketAsyncState<TIn>();
-            state.IsAsync = true;
-            state.Data = data;
-            try
+            if (!await Handler.SendAsync(data, HandlerContext))
             {
-                //开始发送数据并等待完成
-                Handler.BeginSend(data, HandlerContext, EndSend, state);
-            }
-            catch
-            {
-                //出现异常则断开Socket连接
                 Disconnected(true);
+                return false;
+            }
+            else
+            {
+                if (SendCompleted != null)
+                    SendCompleted(this, new SocketEventArgs<TIn>(data, SocketAsyncOperation.Send));
+                return true;
             }
         }
 
-        private void EndSend(IAsyncResult result)
+        public IAsyncResult BeginSend(TIn data, AsyncCallback callback, object state)
         {
-            SocketAsyncState<TIn> state = (SocketAsyncState<TIn>)result.AsyncState;
+            //是否已连接
+            if (!IsConnected)
+                throw new SocketException(10057);
+            //发送的数据不能为null
+            if (data == null)
+                throw new ArgumentNullException("data");
 
-            //是否完成
-            state.Completed = Handler.EndSend(result);
-            //没有完成则断开Socket连接
-            if (!state.Completed)
+            SocketAsyncResult<bool> asyncResult = new SocketAsyncResult<bool>(state);
+            SocketAsyncState<TIn> asyncState = new SocketAsyncState<TIn>();
+            asyncState.AsyncCallback = callback;
+            asyncState.AsyncResult = asyncResult;
+            asyncState.Data = data;
+            Handler.BeginSend(data, HandlerContext, EndBeginSend, asyncState);
+            return asyncResult;
+        }
+
+        public bool EndSend(IAsyncResult ar)
+        {
+            SocketAsyncResult<bool> asyncResult = ar as SocketAsyncResult<bool>;
+            if (asyncResult == null)
+                throw new ArgumentException("异步结果不属于该Socket。");
+            return asyncResult.Data;
+        }
+
+        private void EndBeginSend(IAsyncResult ar)
+        {
+            SocketAsyncState<TIn> state = (SocketAsyncState<TIn>)ar.AsyncState;
+            SocketAsyncResult<bool> asyncResult = (SocketAsyncResult<bool>)state.AsyncResult;
+            bool success = Handler.EndSend(ar);
+            asyncResult.Data = success;
+            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
+            asyncResult.IsCompleted = true;
+            if (!success)
                 Disconnected(true);
 
-            //引发发送结束事件
-            if (state.IsAsync && SendCompleted != null)
-            {
+            if (SendCompleted != null)
                 SendCompleted(this, new SocketEventArgs<TIn>(state.Data, SocketAsyncOperation.Send));
-            }
+            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            if (state.AsyncCallback != null)
+                state.AsyncCallback(state.AsyncResult);
         }
 
         #endregion
 
         #region 接收数据
 
-
-
-        private void EndReceive(IAsyncResult result)
+        public TOut Receive()
         {
-            SocketAsyncState<TOut> state = (SocketAsyncState<TOut>)result.AsyncState;
-            //接收到的数据
-            TOut data = Handler.EndReceive(result);
-            ////如果数据长度为0，则断开Socket连接
-            //if (data.Length == 0)
-            //{
-            //    Disconnected(true);
-            //    return;
-            //}
-            //再次开始接收数据
-            Handler.BeginReceive(HandlerContext, EndReceive, state);
+            //是否已连接
+            if (!IsConnected)
+                throw new SocketException(10057);
+            TOut value = Handler.Receive(HandlerContext);
+            if (value == null)
+            {
+                Disconnect();
+            }
+            else
+                if (ReceiveCompleted != null)
+                    ReceiveCompleted(this, new SocketEventArgs<TOut>(value, SocketAsyncOperation.Receive));
+            return value;
+        }
 
-            //引发接收完成事件
+        public async Task<TOut> ReceiveAsync()
+        {
+            //是否已连接
+            if (!IsConnected)
+                throw new SocketException(10057);
+            TOut value = await Handler.ReceiveAsync(HandlerContext);
+            if (value == null)
+            {
+                await DisconnectAsync();
+            }
+            else
+                if (ReceiveCompleted != null)
+                    ReceiveCompleted(this, new SocketEventArgs<TOut>(value, SocketAsyncOperation.Receive));
+            return value;
+        }
+
+        public IAsyncResult BeginReceive(AsyncCallback callback, object state)
+        {
+            //是否已连接
+            if (!IsConnected)
+                throw new SocketException(10057);
+
+            SocketAsyncResult<TOut> ar = new SocketAsyncResult<TOut>(state);
+            SocketAsyncState asyncState = new SocketAsyncState();
+            asyncState.AsyncCallback = callback;
+            Handler.BeginReceive(HandlerContext, EndBeginReceive, asyncState);
+            return ar;
+        }
+
+        public TOut EndReceive(IAsyncResult ar)
+        {
+            SocketAsyncResult<TOut> asyncResult = ar as SocketAsyncResult<TOut>;
+            if (asyncResult == null)
+                throw new ArgumentException("异步结果不属于该Socket。");
+            return asyncResult.Data;
+        }
+
+        private void EndBeginReceive(IAsyncResult ar)
+        {
+            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
+            SocketAsyncResult<TOut> asyncResult = (SocketAsyncResult<TOut>)state.AsyncResult;
+            TOut data = Handler.EndReceive(ar);
+            if (data == null)
+            {
+                asyncResult.IsCompleted = false;
+                Task.Run((Func<Task>)DisconnectAsync);
+            }
+            else
+                asyncResult.IsCompleted = true;
+            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
+            asyncResult.Data = data;
             if (ReceiveCompleted != null)
                 ReceiveCompleted(this, new SocketEventArgs<TOut>(data, SocketAsyncOperation.Receive));
+            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            if (state.AsyncCallback != null)
+                state.AsyncCallback(asyncResult);
+        }
+
+        public async Task ReceiveCycle()
+        {
+            //是否已连接
+            if (!IsConnected)
+                throw new SocketException(10057);
+            while (IsConnected)
+            {
+                TOut data = await Handler.ReceiveAsync(HandlerContext);
+                if (data == null)
+                {
+                    await DisconnectAsync();
+                    return;
+                }
+                if (ReceiveCompleted != null)
+                    ReceiveCompleted(this, new SocketEventArgs<TOut>(data, SocketAsyncOperation.Receive));
+            }
         }
 
         #endregion
@@ -233,39 +403,19 @@ namespace Wodsoft.Net.Sockets
 
         #region 字典
 
-        private Dictionary<string, object> data;
-        /// <summary>
-        /// 获取或设置字典。
-        /// </summary>
-        /// <param name="key">键</param>
-        /// <returns></returns>
-        public object this[string key]
+        public dynamic DataBag
         {
             get
             {
-                key = key.ToLower();
-                if (data.ContainsKey(key))
-                    return data[key];
-                return null;
-            }
-            set
-            {
-
-                key = key.ToLower();
-                if (value == null)
-                {
-                    if (data.ContainsKey(key))
-                        data.Remove(key);
-                    return;
-                }
-                if (data.ContainsKey(key))
-                    data[key] = value;
-                else
-                    data.Add(key, value);
+                if (_DataBag == null)
+                    _DataBag = new SocketDataBag();
+                return _DataBag;
             }
         }
 
         #endregion
+
+        #region 其它
 
         /// <summary>
         /// 释放资源
@@ -305,5 +455,7 @@ namespace Wodsoft.Net.Sockets
                 return null;
             }
         }
+
+        #endregion
     }
 }

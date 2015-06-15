@@ -7,8 +7,15 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
+    /// <summary>
+    /// Socket异步结果。
+    /// </summary>
     public class SocketAsyncResult :IAsyncResult
     {
+        /// <summary>
+        /// 实例化Socket异步结果。
+        /// </summary>
+        /// <param name="state">异步状态对象。</param>
         public SocketAsyncResult(object state)
         {
             AsyncState = state;
@@ -35,5 +42,12 @@ namespace Wodsoft.Net.Sockets
         /// 获取或设置一个值，该值指示异步操作是否已完成。
         /// </summary>
         public bool IsCompleted { get; set; }
+    }
+
+    public class SocketAsyncResult<T> : SocketAsyncResult
+    {
+        public SocketAsyncResult(object state) : base(state) { }
+
+        public T Data { get; set; }
     }
 }

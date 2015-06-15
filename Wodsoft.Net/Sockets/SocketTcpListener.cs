@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
-    public class SocketTcpListener<TIn, TOut> : IEnumerable<SocketTcpClient<TIn, TOut>>
+    public class SocketTcpListener<TIn, TOut> : IEnumerable<ISocket<TIn, TOut>>
     {
         protected Socket Socket { get; private set; }
 
-        private HashSet<SocketTcpClient<TIn, TOut>> clients;
+        private HashSet<ISocket<TIn, TOut>> clients;
 
         /// <summary>
         /// 实例化TCP监听者。
@@ -21,13 +21,13 @@ namespace Wodsoft.Net.Sockets
         {
             if (handler == null)
                 throw new ArgumentNullException("handler");
-            clients = new HashSet<SocketTcpClient<TIn, TOut>>();
+            clients = new HashSet<ISocket<TIn, TOut>>();
             Handler = handler;
             IsStarted = false;
         }
 
         public ISocketHandler<TIn, TOut> Handler { get; private set; }
-        
+
         public int Count { get { return clients.Count; } }
 
         private int port;
@@ -92,9 +92,9 @@ namespace Wodsoft.Net.Sockets
 
             if (clientSocket == null)
                 return;
-            
+
             //实例化客户端类
-            SocketTcpClient<TIn, TOut> client = new SocketTcpClient<TIn, TOut>(clientSocket, Handler);
+            ISocket<TIn, TOut> client = GetClient(clientSocket);
             //增加事件钩子
             client.DisconnectCompleted += client_DisconnectCompleted;
 
@@ -104,7 +104,7 @@ namespace Wodsoft.Net.Sockets
 
             //客户端连接事件
             if (AcceptCompleted != null)
-                AcceptCompleted(this, new SocketEventArgs<SocketTcpClient<TIn, TOut>>(client, SocketAsyncOperation.Accept));
+                AcceptCompleted(this, new SocketEventArgs<ISocket<TIn, TOut>>(client, SocketAsyncOperation.Accept));
         }
 
         /// <summary>
@@ -127,15 +127,20 @@ namespace Wodsoft.Net.Sockets
             }
         }
 
+        protected virtual ISocket<TIn, TOut> GetClient(Socket socket)
+        {
+            return new SocketTcpClient<TIn, TOut>(socket, Handler);
+        }
+
         /// <summary>
         /// 接受客户完成时引发事件。
         /// </summary>
-        public event EventHandler<SocketEventArgs<SocketTcpClient<TIn, TOut>>> AcceptCompleted;
+        public event EventHandler<SocketEventArgs<ISocket<TIn, TOut>>> AcceptCompleted;
 
         //客户端断开连接
         private void client_DisconnectCompleted(object sender, SocketEventArgs e)
         {
-            SocketTcpClient<TIn, TOut> client = (SocketTcpClient<TIn, TOut>)sender;
+            SocketBase<TIn, TOut> client = (SocketBase<TIn, TOut>)sender;
 
             //移除客户端
             lock (clients)
@@ -148,7 +153,7 @@ namespace Wodsoft.Net.Sockets
         /// 获取客户端泛型。
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<SocketTcpClient<TIn, TOut>> GetEnumerator()
+        public IEnumerator<ISocket<TIn, TOut>> GetEnumerator()
         {
             return clients.GetEnumerator();
         }

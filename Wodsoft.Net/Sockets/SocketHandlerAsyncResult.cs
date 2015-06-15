@@ -25,5 +25,10 @@ namespace Wodsoft.Net.Sockets
         /// 获取处理上下文。
         /// </summary>
         public SocketHandlerContext<TIn, TOut> Context { get; private set; }
+
+        /// <summary>
+        /// 获取或设置异步是否成功。
+        /// </summary>
+        public bool IsSuccess { get; set; }
     }
 }

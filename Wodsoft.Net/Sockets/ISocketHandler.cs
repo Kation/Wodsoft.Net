@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
+    /// <summary>
+    /// Socket处理器接口。
+    /// </summary>
+    /// <typeparam name="TIn">输入类型。</typeparam>
+    /// <typeparam name="TOut">输出类型。</typeparam>
     public interface ISocketHandler<TIn, TOut>
     {
         /// <summary>
