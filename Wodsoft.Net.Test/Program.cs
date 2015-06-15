@@ -6,59 +6,39 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Wodsoft.Net.Http;
 using Wodsoft.Net.Sockets;
 
 namespace Wodsoft.Net.Test
 {
     class Program
     {
-        private static byte[] _Data = new byte[]{
-            100,255,80,5
-        };
-
         static void Main(string[] args)
         {
-            SocketHandler16 socketHandler = new SocketHandler16();
-            SocketTcpListener<byte[], byte[]> listener = new SocketTcpListener<byte[], byte[]>(socketHandler);
-            listener.Port = 7000;
-            listener.AcceptCompleted += listener_AcceptCompleted;
-            listener.Start();
+            //string value = "\r\n";
+            //byte[] data = Encoding.UTF8.GetBytes(value);
+            //Console.WriteLine(string.Join(" ", data));
+            //Console.ReadLine();
 
-            SocketTcpClient<byte[], byte[]> client = new SocketTcpClient<byte[], byte[]>(socketHandler);
-            client.DisconnectCompleted += client_DisconnectCompleted;
-            if (client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7000)))
-            {
-                Console.WriteLine("连接服务器成功。");
-                if (client.Send(_Data))
-                    Console.WriteLine("发送数据成功。");
-                else
-                    Console.WriteLine("发送数据失败。");
-            }
-            else
-            {
-                Console.WriteLine("连接服务器失败。");
-            }
+            SocketTcpListener<HttpResponseSource, HttpRequestSource> listener = new SocketTcpListener<HttpResponseSource, HttpRequestSource>(new HttpSocketHandler());
+            listener.AcceptCompleted += listener_AcceptCompleted;
+            listener.Port = 8000;
+            listener.Start();
             Console.ReadLine();
         }
 
-        static void client_DisconnectCompleted(object sender, SocketEventArgs e)
+        static void listener_AcceptCompleted(object sender, SocketEventArgs<ISocket<HttpResponseSource, HttpRequestSource>> e)
         {
-            Console.WriteLine("服务器断开了连接。");
-            ISocket<byte[], byte[]> socket = (ISocket<byte[], byte[]>)sender;
-            socket.DisconnectCompleted -= client_DisconnectCompleted;
-        }
-
-        static void listener_AcceptCompleted(object sender, SocketEventArgs<ISocket<byte[], byte[]>> e)
-        {
-            e.Data.ReceiveCompleted += Data_ReceiveCompleted;
-        }
-
-        static void Data_ReceiveCompleted(object sender, SocketEventArgs<byte[]> e)
-        {
-            Console.WriteLine("服务器端收到数据：" + string.Join(" ", e.Data));
-            ISocket<byte[], byte[]> socket = (ISocket<byte[], byte[]>)sender;
-            socket.Disconnect();
-            socket.ReceiveCompleted -= Data_ReceiveCompleted;
+            e.Data.ReceiveAsync().ContinueWith((requestTask) =>
+            {
+                HttpRequestSource request = requestTask.Result;
+                //"C:\\" +  request.Path.Replace("/", "\\")
+                HttpResponseSource response = new HttpResponseSource();
+                //response.ContentType = "text/html";
+                
+                e.Data.Send(response);
+                e.Data.Disconnect();
+            });
         }
     }
 }
