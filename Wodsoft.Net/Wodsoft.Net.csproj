@@ -67,7 +67,6 @@
     <Compile Include="Sockets\SocketAsyncResult.cs" />
     <Compile Include="Sockets\SocketAsyncState.cs" />
     <Compile Include="Sockets\SocketBase.cs" />
-    <Compile Include="Sockets\SocketTcpBase.cs" />
     <Compile Include="Sockets\SocketBufferedStream.cs" />
     <Compile Include="Sockets\SocketDataBag.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs" />
@@ -82,11 +81,20 @@
     <Compile Include="Sockets\SocketProcessContext.cs" />
     <Compile Include="Sockets\SocketReceiveContext.cs" />
     <Compile Include="Sockets\SocketSendContext.cs" />
+    <Compile Include="Sockets\SocketTcpBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\SocketTcpClient.cs" />
     <Compile Include="Sockets\SocketTcpListener.cs" />
-    <Compile Include="Sockets\SocketUdpBase.cs" />
-    <Compile Include="Sockets\SocketUdpClient.cs" />
-    <Compile Include="Sockets\SocketUdpListener.cs" />
+    <Compile Include="Sockets\SocketUdpBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketUdpClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketUdpListener.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\SocketUdpStream.cs" />
   </ItemGroup>
   <ItemGroup />
