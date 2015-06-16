@@ -10,15 +10,26 @@ namespace Wodsoft.Net.Http
 {
     public class HttpResponseSource
     {
+        public HttpResponseSource()
+        {
+            Cookies = new NameValueCollection();
+            OutputStream = new MemoryStream();
+            Headers = new NameValueCollection();
+        }
+
         public string Charset { get; set; }
 
         public string ContentType { get; set; }
 
         public int ContentLength { get; set; }
 
-        public DateTime Date { get; set; }
+        public NameValueCollection Cookies { get; set; }
+
+        public DateTime ExipredDate { get; set; }
 
         public NameValueCollection Headers { get; set; }
+
+        public string Protocol { get; set; }
 
         public int StatusCode { get; set; }
 
