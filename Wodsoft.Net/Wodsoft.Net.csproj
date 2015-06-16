@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Http\HttpInputStream.cs" />
     <Compile Include="Http\HttpRequestSource.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -96,6 +97,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketUdpStream.cs" />
+    <Compile Include="Sockets\SocketUdpStreamProvider.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

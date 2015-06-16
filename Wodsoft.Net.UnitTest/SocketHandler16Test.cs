@@ -88,13 +88,13 @@ namespace Wodsoft.Net.UnitTest
             Assert.AreEqual(255, data[99]);
 
             IAsyncResult ar = handler.BeginReceive(context, null, null);
-            ar.AsyncWaitHandle.WaitOne();
-            Assert.AreEqual(false, ar.CompletedSynchronously);
+            Assert.AreEqual(true, ar.CompletedSynchronously);
             data = handler.EndReceive(ar);
             Assert.AreEqual(200, data[99]);
 
             ar = handler.BeginReceive(context, null, null);
             ar.AsyncWaitHandle.WaitOne();
+            Assert.AreEqual(true, ar.CompletedSynchronously);
             data = handler.EndReceive(ar);
             Assert.AreEqual(100, data[99]);
         }
