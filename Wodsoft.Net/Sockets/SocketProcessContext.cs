@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,12 +13,17 @@ namespace Wodsoft.Net.Sockets
         private ManualResetEvent _Event;
         private bool _WorkStatus;
 
-        protected SocketProcessContext()
+        protected SocketProcessContext(Stream source)
         {
+            if (source == null)
+                throw new ArgumentNullException("source");
+            Source = source;
             DataBag = new SocketDataBag();
             _Event = new ManualResetEvent(false);
             _WorkStatus = false;
         }
+
+        public Stream Source { get; private set; }
 
         public dynamic DataBag { get; private set; }
 

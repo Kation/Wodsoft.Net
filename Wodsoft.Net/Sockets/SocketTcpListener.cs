@@ -14,6 +14,11 @@ namespace Wodsoft.Net.Sockets
 
         private HashSet<ISocket<TIn, TOut>> clients;
 
+        public static SocketTcpListener<TIn, TOut> Create<TIn, TOut>(ISocketHandler<TIn, TOut> handler)
+        {
+            return new SocketTcpListener<TIn, TOut>(handler);
+        }
+
         /// <summary>
         /// 实例化TCP监听者。
         /// </summary>
@@ -55,23 +60,20 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         public void Start()
         {
-            lock (this)
-            {
-                if (IsStarted)
-                    throw new InvalidOperationException("已经开始服务。");
-                Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                //绑定端口
-                //可以引发端口被占用异常
-                Socket.Bind(new IPEndPoint(IPAddress.Any, port));
-                //监听队列
-                Socket.Listen(ushort.MaxValue);
-                //如果端口是0，则是随机端口，把这个端口赋值给port
-                port = ((IPEndPoint)Socket.LocalEndPoint).Port;
-                //服务启动中设置为true
-                IsStarted = true;
-                //开始异步监听
-                Socket.BeginAccept(EndAccept, null);
-            }
+            if (IsStarted)
+                throw new InvalidOperationException("已经开始服务。");
+            Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            //绑定端口
+            //可以引发端口被占用异常
+            Socket.Bind(new IPEndPoint(IPAddress.Any, port));
+            //监听队列
+            Socket.Listen(ushort.MaxValue);
+            //如果端口是0，则是随机端口，把这个端口赋值给port
+            port = ((IPEndPoint)Socket.LocalEndPoint).Port;
+            //服务启动中设置为true
+            IsStarted = true;
+            //开始异步监听
+            Socket.BeginAccept(EndAccept, null);
         }
 
         //异步监听结束
@@ -112,19 +114,16 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         public void Stop()
         {
-            lock (this)
+            if (!IsStarted)
+                throw new InvalidOperationException("没有开始服务。");
+            foreach (var client in clients.ToArray())
             {
-                if (!IsStarted)
-                    throw new InvalidOperationException("没有开始服务。");
-                foreach (var client in clients.ToArray())
-                {
-                    client.Disconnect();
-                    client.DisconnectCompleted -= client_DisconnectCompleted;
-                }
-                Socket.Close();
-                Socket = null;
-                IsStarted = false;
+                client.Disconnect();
+                client.DisconnectCompleted -= client_DisconnectCompleted;
             }
+            Socket.Close();
+            Socket = null;
+            IsStarted = false;
         }
 
         protected virtual ISocket<TIn, TOut> GetClient(Socket socket)

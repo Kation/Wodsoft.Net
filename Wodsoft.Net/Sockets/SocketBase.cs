@@ -14,7 +14,7 @@ namespace Wodsoft.Net.Sockets
     /// </summary>
     /// <typeparam name="TIn">输入类型。</typeparam>
     /// <typeparam name="TOut">输出类型。</typeparam>
-    public abstract class SocketBase<TIn, TOut> : ISocket<TIn, TOut>
+    public abstract class SocketBase<TIn, TOut> : ISocket<TIn, TOut>, IDisposable
     {
         private SocketDataBag _DataBag;
 
@@ -34,7 +34,7 @@ namespace Wodsoft.Net.Sockets
                 throw new ArgumentNullException("streamProvider");
             Socket = socket;
             Handler = socketHandler;
-            StreamProvider = StreamProvider;
+            StreamProvider = streamProvider;
         }
         
         /// <summary>
@@ -60,7 +60,7 @@ namespace Wodsoft.Net.Sockets
         /// <summary>
         /// 获取或设置Socket是否已连接。
         /// </summary>
-        public bool IsConnected { get; protected set; }
+        public virtual bool IsConnected { get; protected set; }
 
         #region 初始化
 
@@ -363,13 +363,21 @@ namespace Wodsoft.Net.Sockets
         #region 其它
 
         /// <summary>
-        /// 释放资源
+        /// 释放资源。
         /// </summary>
         public void Dispose()
         {
             Disposed();
+            if (_DataBag != null)
+            {
+                _DataBag.Clear();
+                _DataBag = null;
+            }
         }
 
+        /// <summary>
+        /// 释放资源。
+        /// </summary>
         protected virtual void Disposed()
         {
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,8 @@ namespace Wodsoft.Net.Sockets
 {
     public class SocketReceiveContext<T> : SocketProcessContext
     {
-        public SocketReceiveContext()
+        public SocketReceiveContext(Stream source)
+            : base(source)
         {
             Buffer = new SocketBufferedStream();
         }

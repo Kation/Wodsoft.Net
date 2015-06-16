@@ -264,6 +264,11 @@ namespace Wodsoft.Net.Sockets
             return -1;
         }
 
+        public override void Close()
+        {
+            Clear();
+        }
+
         public virtual void Clear()
         {
             _Buffer.RemoveRange(1, _Buffer.Count - 1);
