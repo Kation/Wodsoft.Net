@@ -62,43 +62,87 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Protocol\ProtocolEventHandler.cs" />
-    <Compile Include="Sockets\ISocket.cs" />
-    <Compile Include="Sockets\ISocketDgramContext.cs" />
-    <Compile Include="Sockets\ISocketDgramHandler.cs" />
-    <Compile Include="Sockets\ISocketStreamHandler.cs" />
-    <Compile Include="Sockets\ISocketStreamProvider.cs" />
-    <Compile Include="Sockets\SocketAsyncResult.cs" />
-    <Compile Include="Sockets\SocketAsyncState.cs" />
-    <Compile Include="Sockets\SocketStreamBase.cs" />
-    <Compile Include="Sockets\SocketBufferedStream.cs" />
-    <Compile Include="Sockets\SocketDataBag.cs" />
-    <Compile Include="Sockets\SocketEventArgs.cs" />
-    <Compile Include="Sockets\SocketHandler16.cs" />
-    <Compile Include="Sockets\SocketHandler32.cs">
+    <Compile Include="Sockets\ISocket.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketHandlerAsyncResult.cs" />
-    <Compile Include="Sockets\SocketStreamHandlerContext.cs" />
-    <Compile Include="Sockets\SocketHeadContentHandler.cs" />
-    <Compile Include="Sockets\SocketNetworkStreamProvider.cs" />
-    <Compile Include="Sockets\SocketProcessContext.cs" />
-    <Compile Include="Sockets\SocketReceiveContext.cs" />
-    <Compile Include="Sockets\SocketSendContext.cs" />
-    <Compile Include="Sockets\SocketTcpBase.cs">
+    <Compile Include="Sockets\ISocketDgramContext.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketTcpClient.cs" />
-    <Compile Include="Sockets\SocketTcpListener.cs" />
+    <Compile Include="Sockets\ISocketDgramHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\ISocketStreamHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\ISocketStreamProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketAsyncResult.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketAsyncState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketBufferedStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketDataBag.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\SocketDgramBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketUdpClient.cs" />
-    <Compile Include="Sockets\SocketUdpContext.cs" />
+    <Compile Include="Sockets\SocketEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketHandler16.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketHandler32.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketHandlerAsyncResult.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketHeadContentHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketNetworkStreamProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketProcessContext.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketReceiveContext.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketSendContext.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketStreamBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketStreamHandlerContext.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketTcpBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketTcpClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketTcpListener.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketUdpClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Sockets\SocketUdpContext.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sockets\SocketUdpHost.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketUdpStream.cs" />
-    <Compile Include="Sockets\SocketUdpStreamProvider.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
