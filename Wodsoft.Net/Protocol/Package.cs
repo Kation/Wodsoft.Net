@@ -8,7 +8,7 @@ namespace Wodsoft.Net.Protocol
 {
     public class Package
     {
-        public Package(int packageId, int commandId)
+        public Package(int packageId,int commandId)
         {
             PackageId = packageId;
             CommandId = commandId;
@@ -17,5 +17,7 @@ namespace Wodsoft.Net.Protocol
         public int PackageId { get; private set; }
 
         public int CommandId { get; private set; }
+
+        public byte[] Data { get; set; }
     }
 }

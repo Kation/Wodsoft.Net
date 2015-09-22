@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
+    /// <summary>
+    /// Socket缓存流。
+    /// </summary>
     public class SocketBufferedStream : Stream
     {
         private int _BufferSize;
@@ -17,8 +20,15 @@ namespace Wodsoft.Net.Sockets
         private int _CurrentPosition;
         private int _DirtyLength;
 
+        /// <summary>
+        /// 以4096字节大小实例化一个Socket缓存流。
+        /// </summary>
         public SocketBufferedStream() : this(4096) { }
 
+        /// <summary>
+        /// 初始化Socket缓存流。
+        /// </summary>
+        /// <param name="bufferSize">缓存块大小。</param>
         public SocketBufferedStream(int bufferSize)
         {
             if (bufferSize < 1)
@@ -28,16 +38,37 @@ namespace Wodsoft.Net.Sockets
             _Buffer.Add(new byte[bufferSize]);
         }
 
+        /// <summary>
+        /// 获取是否支持读取。
+        /// 永远返回true。
+        /// </summary>
         public override bool CanRead { get { return true; } }
 
+        /// <summary>
+        /// 获取是否支持查找。
+        /// 永远返回true。
+        /// </summary>
         public override bool CanSeek { get { return true; } }
 
+        /// <summary>
+        /// 获取是否支持写入。
+        /// 永远返回true。
+        /// </summary>
         public override bool CanWrite { get { return true; } }
 
+        /// <summary>
+        /// 刷新缓存。无效的方法。
+        /// </summary>
         public override void Flush() { }
 
+        /// <summary>
+        /// 获取缓存有效长度。
+        /// </summary>
         public override long Length { get { return _Length; } }
 
+        /// <summary>
+        /// 获取缓存当前位置。
+        /// </summary>
         public override long Position
         {
             get
@@ -54,6 +85,13 @@ namespace Wodsoft.Net.Sockets
             }
         }
 
+        /// <summary>
+        /// 从缓存读取数据。
+        /// </summary>
+        /// <param name="buffer">缓冲区</param>
+        /// <param name="offset">偏移量。</param>
+        /// <param name="count">要读取的字节数量。</param>
+        /// <returns>成功读取的字节数。</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count > _Length - Position)
@@ -80,6 +118,10 @@ namespace Wodsoft.Net.Sockets
             return result;
         }
 
+        /// <summary>
+        /// 从缓存读取单个字节。
+        /// </summary>
+        /// <returns>没有数据则返回-1。</returns>
         public override int ReadByte()
         {
             if (_Position == _Length)
@@ -96,6 +138,12 @@ namespace Wodsoft.Net.Sockets
             return value;
         }
 
+        /// <summary>
+        /// 寻找缓存位置。
+        /// </summary>
+        /// <param name="offset">偏移位置。</param>
+        /// <param name="origin">相对位置。</param>
+        /// <returns>新的流位置。</returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
@@ -119,6 +167,10 @@ namespace Wodsoft.Net.Sockets
             return _Position;
         }
 
+        /// <summary>
+        /// 设置缓存总大小。
+        /// </summary>
+        /// <param name="value">缓存大小。</param>
         public override void SetLength(long value)
         {
             int bufferSize = (int)Math.Ceiling((value + _DirtyLength) / (double)_BufferSize);
@@ -127,6 +179,12 @@ namespace Wodsoft.Net.Sockets
             _Length = value;
         }
 
+        /// <summary>
+        /// 向缓存写入数据。
+        /// </summary>
+        /// <param name="buffer">缓冲区。</param>
+        /// <param name="offset">偏移量。</param>
+        /// <param name="count">字节数。</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             while (count > 0)
@@ -152,6 +210,10 @@ namespace Wodsoft.Net.Sockets
             }
         }
 
+        /// <summary>
+        /// 向缓存写入单个字节。
+        /// </summary>
+        /// <param name="value">数据。</param>
         public override void WriteByte(byte value)
         {
             byte[] buffer = _Buffer[_CurrentCursor];
@@ -169,6 +231,10 @@ namespace Wodsoft.Net.Sockets
             }
         }
 
+        /// <summary>
+        /// 将缓存的所有数据转换为字节数据。
+        /// </summary>
+        /// <returns></returns>
         public virtual byte[] ToArray()
         {
             byte[] data = new byte[_Length];
@@ -197,11 +263,22 @@ namespace Wodsoft.Net.Sockets
             return data;
         }
 
+        /// <summary>
+        /// 查找字节位置。
+        /// </summary>
+        /// <param name="value">要查找的字节。</param>
+        /// <returns>字节所在位置，找不到返回-1。</returns>
         public virtual int IndexOf(byte value)
         {
             return IndexOf(value, 0);
         }
 
+        /// <summary>
+        /// 查找字节位置。
+        /// </summary>
+        /// <param name="value">要查找的字节。</param>
+        /// <param name="startIndex">开始查找的位置。</param>
+        /// <returns>字节所在位置，找不到返回-1。</returns>
         public virtual int IndexOf(byte value, int startIndex)
         {
             if (startIndex < 0 || startIndex >= _Length)
@@ -227,11 +304,22 @@ namespace Wodsoft.Net.Sockets
             return -1;
         }
 
+        /// <summary>
+        /// 查找字节位置。
+        /// </summary>
+        /// <param name="values">要查找的数据。</param>
+        /// <returns>数据所在位置，找不到返回-1。</returns>
         public virtual int IndexOfValues(params byte[] values)
         {
             return IndexOfValues(values, 0);
         }
 
+        /// <summary>
+        /// 查找字节位置。
+        /// </summary>
+        /// <param name="values">要查找的数据。</param>
+        /// <param name="startIndex">开始查找的位置。</param>
+        /// <returns>数据所在位置，找不到返回-1。</returns>
         public virtual int IndexOfValues(byte[] values, int startIndex)
         {
             if (startIndex < 0 || startIndex >= _Length)
@@ -264,11 +352,17 @@ namespace Wodsoft.Net.Sockets
             return -1;
         }
 
+        /// <summary>
+        /// 关闭缓存流。等同于Clear。
+        /// </summary>
         public override void Close()
         {
             Clear();
         }
 
+        /// <summary>
+        /// 清空缓存流。
+        /// </summary>
         public virtual void Clear()
         {
             _Buffer.RemoveRange(1, _Buffer.Count - 1);
@@ -278,7 +372,11 @@ namespace Wodsoft.Net.Sockets
             _Position = 0;
             _DirtyLength = 0;
         }
-
+        
+        /// <summary>
+        /// 重置缓存位置。
+        /// 该方法会将缓存的当前位置之前的数据删除，当前位置变为0。
+        /// </summary>
         public virtual void ResetPosition()
         {
             _Buffer.RemoveRange(0, _CurrentCursor);
@@ -288,6 +386,10 @@ namespace Wodsoft.Net.Sockets
             _Position = 0;
         }
 
+        /// <summary>
+        /// 释放缓存流。
+        /// </summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             _Buffer.Clear();

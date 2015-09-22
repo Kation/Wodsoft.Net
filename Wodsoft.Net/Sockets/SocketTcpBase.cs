@@ -16,14 +16,14 @@ namespace Wodsoft.Net.Sockets
     /// </summary>
     /// <typeparam name="TIn">输入类型。</typeparam>
     /// <typeparam name="TOut">输出类型。</typeparam>
-    public abstract class SocketTcpBase<TIn, TOut> : SocketBase<TIn, TOut>, IDisposable
+    public abstract class SocketTcpBase<TIn, TOut> : SocketStreamBase<TIn, TOut>, IDisposable
     {
         /// <summary>
         /// 实例化TCP客户端。
         /// </summary>
         /// <param name="socket">Socket套接字。</param>
         /// <param name="socketHandler">Socket处理器。</param>
-        protected SocketTcpBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler)
+        protected SocketTcpBase(Socket socket, ISocketStreamHandler<TIn, TOut> socketHandler)
             : this(socket, socketHandler, new SocketNetworkStreamProvider()) { }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Wodsoft.Net.Sockets
         /// <param name="socket">Socket套接字。</param>
         /// <param name="socketHandler">Socket处理器。</param>
         /// <param name="streamProvider">Socket网络流提供者。</param>
-        protected SocketTcpBase(Socket socket, ISocketHandler<TIn, TOut> socketHandler, ISocketStreamProvider streamProvider)
+        protected SocketTcpBase(Socket socket, ISocketStreamHandler<TIn, TOut> socketHandler, ISocketStreamProvider streamProvider)
             : base(socket, socketHandler, streamProvider)
         {
             if (socket == null)

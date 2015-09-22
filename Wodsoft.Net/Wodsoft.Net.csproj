@@ -50,24 +50,26 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\Command.cs">
+    <Compile Include="Protocol\CommandBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Protocol\Package.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Protocol\CommandAttribute.cs" />
+    <Compile Include="Protocol\Package.cs" />
     <Compile Include="Protocol\PackageHandler.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Protocol\ProtocolManager.cs">
+    <Compile Include="Protocol\ProtocolChannel.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Protocol\ProtocolEventHandler.cs" />
     <Compile Include="Sockets\ISocket.cs" />
-    <Compile Include="Sockets\ISocketHandler.cs" />
+    <Compile Include="Sockets\ISocketDgramContext.cs" />
+    <Compile Include="Sockets\ISocketDgramHandler.cs" />
+    <Compile Include="Sockets\ISocketStreamHandler.cs" />
     <Compile Include="Sockets\ISocketStreamProvider.cs" />
     <Compile Include="Sockets\SocketAsyncResult.cs" />
     <Compile Include="Sockets\SocketAsyncState.cs" />
-    <Compile Include="Sockets\SocketBase.cs" />
+    <Compile Include="Sockets\SocketStreamBase.cs" />
     <Compile Include="Sockets\SocketBufferedStream.cs" />
     <Compile Include="Sockets\SocketDataBag.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs" />
@@ -76,7 +78,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketHandlerAsyncResult.cs" />
-    <Compile Include="Sockets\SocketHandlerContext.cs" />
+    <Compile Include="Sockets\SocketStreamHandlerContext.cs" />
     <Compile Include="Sockets\SocketHeadContentHandler.cs" />
     <Compile Include="Sockets\SocketNetworkStreamProvider.cs" />
     <Compile Include="Sockets\SocketProcessContext.cs" />
@@ -87,13 +89,12 @@
     </Compile>
     <Compile Include="Sockets\SocketTcpClient.cs" />
     <Compile Include="Sockets\SocketTcpListener.cs" />
-    <Compile Include="Sockets\SocketUdpBase.cs">
+    <Compile Include="Sockets\SocketDgramBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketUdpClient.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sockets\SocketUdpListener.cs">
+    <Compile Include="Sockets\SocketUdpClient.cs" />
+    <Compile Include="Sockets\SocketUdpContext.cs" />
+    <Compile Include="Sockets\SocketUdpHost.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketUdpStream.cs" />

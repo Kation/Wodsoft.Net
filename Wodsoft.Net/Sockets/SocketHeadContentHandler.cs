@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
-    public abstract class SocketHeadContentHandler<TIn, TOut> : ISocketHandler<TIn, TOut>
+    public abstract class SocketHeadContentHandler<TIn, TOut> : ISocketStreamHandler<TIn, TOut>
     {
         protected int HeadBufferLength { get; private set; }
 
@@ -34,7 +34,7 @@ namespace Wodsoft.Net.Sockets
             return ProcessReceiveContent(context);
         }
 
-        public IAsyncResult BeginReceive(SocketHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
+        public IAsyncResult BeginReceive(SocketStreamHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
         {
             //context不能为null
             if (context == null)
@@ -248,7 +248,7 @@ namespace Wodsoft.Net.Sockets
             return value;
         }
 
-        public TOut Receive(SocketHandlerContext<TIn, TOut> context)
+        public TOut Receive(SocketStreamHandlerContext<TIn, TOut> context)
         {
             if (context == null)
                 throw new ArgumentNullException("context");
@@ -323,7 +323,7 @@ namespace Wodsoft.Net.Sockets
             return value;
         }
 
-        public async Task<TOut> ReceiveAsync(SocketHandlerContext<TIn, TOut> context)
+        public async Task<TOut> ReceiveAsync(SocketStreamHandlerContext<TIn, TOut> context)
         {
             if (context == null)
                 throw new ArgumentNullException("context");
@@ -402,7 +402,7 @@ namespace Wodsoft.Net.Sockets
 
         protected abstract bool ProcessReceiveContent(SocketReceiveContext<TOut> context);
 
-        public IAsyncResult BeginSend(TIn data, SocketHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
+        public IAsyncResult BeginSend(TIn data, SocketStreamHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
         {
             //data不能为null
             if (data == null)
@@ -502,7 +502,7 @@ namespace Wodsoft.Net.Sockets
             return result.IsSuccess;
         }
 
-        public bool Send(TIn data, SocketHandlerContext<TIn, TOut> context)
+        public bool Send(TIn data, SocketStreamHandlerContext<TIn, TOut> context)
         {
             context.SendContext.CheckQueue();
             context.SendContext.Data = data;
@@ -522,7 +522,7 @@ namespace Wodsoft.Net.Sockets
             return true;
         }
 
-        public async Task<bool> SendAsync(TIn data, SocketHandlerContext<TIn, TOut> context)
+        public async Task<bool> SendAsync(TIn data, SocketStreamHandlerContext<TIn, TOut> context)
         {
             context.SendContext.CheckQueue();
             context.SendContext.Data = data;
@@ -551,7 +551,7 @@ namespace Wodsoft.Net.Sockets
             /// <summary>
             /// 数据
             /// </summary>
-            public SocketHandlerContext<TIn, TOut> Context { get; set; }
+            public SocketStreamHandlerContext<TIn, TOut> Context { get; set; }
             /// <summary>
             /// 异步结果
             /// </summary>

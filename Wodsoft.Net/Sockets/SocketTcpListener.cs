@@ -14,7 +14,7 @@ namespace Wodsoft.Net.Sockets
 
         private HashSet<ISocket<TIn, TOut>> clients;
 
-        public static SocketTcpListener<TIn, TOut> Create<TIn, TOut>(ISocketHandler<TIn, TOut> handler)
+        public static SocketTcpListener<TIn, TOut> Create<TIn, TOut>(ISocketStreamHandler<TIn, TOut> handler)
         {
             return new SocketTcpListener<TIn, TOut>(handler);
         }
@@ -22,7 +22,7 @@ namespace Wodsoft.Net.Sockets
         /// <summary>
         /// 实例化TCP监听者。
         /// </summary>
-        public SocketTcpListener(ISocketHandler<TIn, TOut> handler)
+        public SocketTcpListener(ISocketStreamHandler<TIn, TOut> handler)
         {
             if (handler == null)
                 throw new ArgumentNullException("handler");
@@ -31,7 +31,7 @@ namespace Wodsoft.Net.Sockets
             IsStarted = false;
         }
 
-        public ISocketHandler<TIn, TOut> Handler { get; private set; }
+        public ISocketStreamHandler<TIn, TOut> Handler { get; private set; }
 
         public int Count { get { return clients.Count; } }
 

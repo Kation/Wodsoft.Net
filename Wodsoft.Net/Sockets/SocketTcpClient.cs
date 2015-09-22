@@ -21,7 +21,7 @@ namespace Wodsoft.Net.Sockets
         /// 实例化SocketTcpClient。
         /// </summary>
         /// <param name="handler">Socket处理器。</param>
-        public SocketTcpClient(ISocketHandler<TIn, TOut> handler)
+        public SocketTcpClient(ISocketStreamHandler<TIn, TOut> handler)
             : base(new Socket(SocketType.Stream, ProtocolType.Tcp), handler)
         {
 
@@ -32,7 +32,7 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         /// <param name="socket">处理过的Socket。</param>
         /// <param name="handler">Socket处理器。</param>
-        public SocketTcpClient(Socket socket, ISocketHandler<TIn, TOut> handler)
+        public SocketTcpClient(Socket socket, ISocketStreamHandler<TIn, TOut> handler)
             : base(socket, handler)
         {
             Initialize();
