@@ -39,7 +39,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Http\HttpInputStream.cs" />
     <Compile Include="Http\HttpRequestSource.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -50,18 +49,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\CommandBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Protocol\CommandAttribute.cs" />
     <Compile Include="Protocol\Package.cs" />
     <Compile Include="Protocol\PackageHandler.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Protocol\ProtocolChannel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Protocol\ProtocolEventHandler.cs" />
     <Compile Include="Sockets\ISocket.cs">
       <SubType>Code</SubType>
     </Compile>
