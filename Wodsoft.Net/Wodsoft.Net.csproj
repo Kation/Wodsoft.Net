@@ -119,6 +119,7 @@
     <Compile Include="Sockets\SocketSendContext.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\SocketSourceHandler.cs" />
     <Compile Include="Sockets\SocketStreamBase.cs">
       <SubType>Code</SubType>
     </Compile>

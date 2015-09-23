@@ -13,28 +13,48 @@ namespace Wodsoft.Net.Sockets
             : base(context, socketHandler)
         {
             Context = context;
+            _IsConnected = true;
         }
 
         public SocketUdpContext Context { get; private set; }
 
+        private bool _IsConnected;
+        public override bool IsConnected
+        {
+            get
+            {
+                return _IsConnected;
+            }
+        }
+
         public override void Disconnect()
         {
-            throw new NotImplementedException();
+            Context.OnDisconnect();
+            OnDisconnected();
+            _IsConnected = false;
         }
 
         public override Task DisconnectAsync()
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                Context.OnDisconnect();
+                OnDisconnected();
+                _IsConnected = false;
+            });
         }
 
         public override IAsyncResult BeginDisconnect(AsyncCallback callback, object state)
         {
-            throw new NotImplementedException();
+            SocketAsyncResult result = new SocketAsyncResult(state);
+            Disconnect();
+            _IsConnected = false;
+            result.CompletedSynchronously = true;
+            return result;
         }
 
         public override void EndDisconnect(IAsyncResult ar)
         {
-            throw new NotImplementedException();
         }
 
         public override IPEndPoint RemoteEndPoint

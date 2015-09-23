@@ -57,7 +57,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SocketHandler16Test.cs" />
-    <Compile Include="SocketTest.cs" />
+    <Compile Include="SocketTcpTest.cs" />
+    <Compile Include="SocketUdpTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Wodsoft.Net\Wodsoft.Net.csproj">

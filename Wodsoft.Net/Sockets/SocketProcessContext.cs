@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Wodsoft.Net.Sockets
 {
-    public class SocketProcessContext
+    public class SocketProcessContext : IDisposable
     {
         private ManualResetEvent _Event;
         private bool _WorkStatus;
@@ -113,6 +113,11 @@ namespace Wodsoft.Net.Sockets
             _WorkStatus = false;
             IsFailed = false;
             _Event.Set();
+        }
+
+        public void Dispose()
+        {
+            _Event.Dispose();
         }
     }
 }
