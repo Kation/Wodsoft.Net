@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Http\HttpInputStream.cs" />
     <Compile Include="Http\HttpRequestSource.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -56,6 +57,9 @@
     <Compile Include="Sockets\ISocket.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\ISocketDgramContext.cs" />
+    <Compile Include="Sockets\ISocketDgramHandler.cs" />
+    <Compile Include="Sockets\ISocketStreamHandler.cs" />
     <Compile Include="Sockets\ISocketStreamProvider.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -71,6 +75,7 @@
     <Compile Include="Sockets\SocketDataBag.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\SocketDgramBase.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -98,6 +103,9 @@
     <Compile Include="Sockets\SocketSendContext.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\SocketSourceHandler.cs" />
+    <Compile Include="Sockets\SocketStreamBase.cs" />
+    <Compile Include="Sockets\SocketStreamHandlerContext.cs" />
     <Compile Include="Sockets\SocketTcpBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -110,6 +118,7 @@
     <Compile Include="Sockets\SocketUdpClient.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\SocketUdpContext.cs" />
     <Compile Include="Sockets\SocketUdpHost.cs">
       <SubType>Code</SubType>
     </Compile>
