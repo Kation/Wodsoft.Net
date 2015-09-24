@@ -16,7 +16,7 @@ namespace Wodsoft.Net.UnitTest
         public void WriteTest()
         {
             MemoryStream stream = new MemoryStream();
-            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream);
+            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream, null);
             SocketHandler16 handler = new SocketHandler16();
             byte[] data = new byte[10000];
             data[9999] = 255;
@@ -30,7 +30,7 @@ namespace Wodsoft.Net.UnitTest
         public async Task WriteAsyncTest()
         {
             MemoryStream stream = new MemoryStream();
-            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream);
+            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream, null);
             SocketHandler16 handler = new SocketHandler16();
             byte[] data = new byte[10000];
             data[9999] = 255;
@@ -51,7 +51,7 @@ namespace Wodsoft.Net.UnitTest
         public void ReadTest()
         {
             MemoryStream stream = new MemoryStream();
-            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream);
+            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream, null);
             SocketHandler16 handler = new SocketHandler16();
             byte[] data = new byte[10000];
             data[9999] = 255;
@@ -66,7 +66,7 @@ namespace Wodsoft.Net.UnitTest
         public async Task ReadAsyncTest()
         {
             MemoryStream stream = new MemoryStream();
-            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream);
+            SocketStreamHandlerContext<byte[], byte[]> context = new SocketStreamHandlerContext<byte[], byte[]>(stream, null);
             SocketHandler16 handler = new SocketHandler16();
             byte[] data = new byte[100];
             data[99] = 255;

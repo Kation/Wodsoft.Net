@@ -69,12 +69,12 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         protected virtual void Initialize()
         {
-            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.GetStream(Socket));
+            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.GetStream(Socket), DataBag);
         }
 
         protected virtual async Task InitializeAsync()
         {
-            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket));
+            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket), DataBag);
         }
 
         protected virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
@@ -91,7 +91,7 @@ namespace Wodsoft.Net.Sockets
         {
             SocketAsyncState asyncState = (SocketAsyncState)ar.AsyncState;
             SocketAsyncResult asyncResult = (SocketAsyncResult)asyncState.AsyncResult;
-            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar));
+            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar), DataBag);
             asyncResult.IsCompleted = true;
             asyncResult.CompletedSynchronously = true;
             if (asyncState.AsyncCallback != null)
