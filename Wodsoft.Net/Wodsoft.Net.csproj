@@ -73,6 +73,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketDgramBase.cs" />
+    <Compile Include="Sockets\SocketEncryptedStream.cs" />
+    <Compile Include="Sockets\SocketEncryptedStreamProvider.cs" />
     <Compile Include="Sockets\SocketEventArgs.cs">
       <SubType>Code</SubType>
     </Compile>

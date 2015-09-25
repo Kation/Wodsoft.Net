@@ -29,9 +29,25 @@ namespace Wodsoft.Net.Sockets
             clients = new HashSet<ISocket<TIn, TOut>>();
             Handler = handler;
             IsStarted = false;
+            StreamProvider = new SocketNetworkStreamProvider();
         }
 
         public ISocketStreamHandler<TIn, TOut> Handler { get; private set; }
+
+        private ISocketStreamProvider _StreamProvider;
+        public ISocketStreamProvider StreamProvider
+        {
+            get
+            {
+                return _StreamProvider;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                _StreamProvider = value;
+            }
+        }
 
         public int Count { get { return clients.Count; } }
 
@@ -128,7 +144,7 @@ namespace Wodsoft.Net.Sockets
 
         protected virtual ISocket<TIn, TOut> GetClient(Socket socket)
         {
-            return new SocketTcpClient<TIn, TOut>(socket, Handler);
+            return new SocketTcpClient<TIn, TOut>(socket, Handler, StreamProvider);
         }
 
         /// <summary>

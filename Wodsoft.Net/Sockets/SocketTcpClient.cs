@@ -23,17 +23,26 @@ namespace Wodsoft.Net.Sockets
         /// <param name="handler">Socket处理器。</param>
         public SocketTcpClient(ISocketStreamHandler<TIn, TOut> handler)
             : base(new Socket(SocketType.Stream, ProtocolType.Tcp), handler)
-        {
+        { }
 
-        }
+        /// <summary>
+        /// 实例化SocketTcpClient。
+        /// </summary>
+        /// <param name="handler">Socket处理器。</param>
+        /// <param name="streamProvider">Socket流提供器。</param>
+        public SocketTcpClient(ISocketStreamHandler<TIn, TOut> handler, ISocketStreamProvider streamProvider)
+            : base(new Socket(SocketType.Stream, ProtocolType.Tcp), handler, streamProvider)
+        { }
+
 
         /// <summary>
         /// 使用已处理过的Socket实例化SocketTcpClient。
         /// </summary>
         /// <param name="socket">处理过的Socket。</param>
         /// <param name="handler">Socket处理器。</param>
-        public SocketTcpClient(Socket socket, ISocketStreamHandler<TIn, TOut> handler)
-            : base(socket, handler)
+        /// <param name="streamProvider">Socket流提供器。</param>
+        public SocketTcpClient(Socket socket, ISocketStreamHandler<TIn, TOut> handler, ISocketStreamProvider streamProvider)
+            : base(socket, handler, streamProvider)
         {
             Initialize();
         }
