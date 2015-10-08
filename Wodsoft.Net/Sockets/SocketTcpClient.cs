@@ -43,9 +43,7 @@ namespace Wodsoft.Net.Sockets
         /// <param name="streamProvider">Socket流提供器。</param>
         public SocketTcpClient(Socket socket, ISocketStreamHandler<TIn, TOut> handler, ISocketStreamProvider streamProvider)
             : base(socket, handler, streamProvider)
-        {
-            Initialize();
-        }
+        { }
 
         #region 连接
 
