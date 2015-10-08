@@ -15,7 +15,6 @@ namespace Wodsoft.Net.Sockets
     public class SocketEncryptedStream : AuthenticatedStream
     {
         private readonly static byte[] _ProtocolData = new byte[] { 0xeb, 0x77, 0x20, 0xff };
-        private readonly static byte[] _SuccessData = new byte[] { 0xeb, 0x77, 0x80, 0xa0 };
 
         public SocketEncryptedStream(Stream innerStream, int keySize)
             : base(innerStream, true)
@@ -308,18 +307,18 @@ namespace Wodsoft.Net.Sockets
             Keys = rsa.Decrypt(data, true);
             _IsAuthenticated = true;
 
-            //通过加密流发送成功信息
-            Write(_SuccessData, 0, _SuccessData.Length);
+            ////通过加密流发送成功信息
+            //Write(_SuccessData, 0, _SuccessData.Length);
 
-            //通过加密流接收成功信息
-            byte[] successData = new byte[_SuccessData.Length];
-            length = 0;
-            while (length != successData.Length)
-                length += Read(successData, length, successData.Length - length);
-            //检测成功数据是否正确
-            for (int i = 0; i < _SuccessData.Length; i++)
-                if (_SuccessData[i] != successData[i])
-                    throw new AuthenticationException("验证加密成功信息失败。");
+            ////通过加密流接收成功信息
+            //byte[] successData = new byte[_SuccessData.Length];
+            //length = 0;
+            //while (length != successData.Length)
+            //    length += Read(successData, length, successData.Length - length);
+            ////检测成功数据是否正确
+            //for (int i = 0; i < _SuccessData.Length; i++)
+            //    if (_SuccessData[i] != successData[i])
+            //        throw new AuthenticationException("验证加密成功信息失败。");
             _IsMutuallyAuthenticated = true;
         }
 
@@ -357,32 +356,40 @@ namespace Wodsoft.Net.Sockets
             Keys = rsa.Decrypt(data, true);
             _IsAuthenticated = true;
 
-            //通过加密流发送成功信息
-            await WriteAsync(_SuccessData, 0, _SuccessData.Length);
+            ////通过加密流发送成功信息
+            //await WriteAsync(_SuccessData, 0, _SuccessData.Length);
 
-            //通过加密流接收成功信息
-            byte[] successData = new byte[_SuccessData.Length];
-            length = 0;
-            while (length != successData.Length)
-                length += await ReadAsync(successData, length, successData.Length - length);
-            //检测成功数据是否正确
-            for (int i = 0; i < _SuccessData.Length; i++)
-                if (_SuccessData[i] != successData[i])
-                    throw new AuthenticationException("验证加密成功信息失败。");
+            ////通过加密流接收成功信息
+            //byte[] successData = new byte[_SuccessData.Length];
+            //length = 0;
+            //while (length != successData.Length)
+            //    length += await ReadAsync(successData, length, successData.Length - length);
+            ////检测成功数据是否正确
+            //for (int i = 0; i < _SuccessData.Length; i++)
+            //    if (_SuccessData[i] != successData[i])
+            //        throw new AuthenticationException("验证加密成功信息失败。");
             _IsMutuallyAuthenticated = true;
         }
 
-        //public IAsyncResult BeginAuthenticateAsClient()
-        //{
-        //    if (IsAuthenticated)
-        //        throw new InvalidOperationException("已经通过了身份验证。");
-        //    //接收服务器端发送的协议识别数据
-        //    byte[] protocolData = new byte[_ProtocolData.Length];
-        //    int length = 0;
-        //    while (length != 4)
-        //        length += InnerStream.ReadAsync(protocolData, length, protocolData.Length - length);
+        public IAsyncResult BeginAuthenticateAsClient(AsyncCallback callback, object state)
+        {
+            if (IsAuthenticated)
+                throw new InvalidOperationException("已经通过了身份验证。");
+            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
+            AuthenticateAsClientAsync().ContinueWith(task =>
+            {
+                asyncResult.IsCompleted = true;
+                if (callback != null)
+                    callback(asyncResult);
+                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            });
+            return asyncResult;
+        }
 
-        //}
+        public void EndAuthenticateAsClient(IAsyncResult ar)
+        {
+
+        }
 
         public void AuthenticateAsServer()
         {
@@ -413,22 +420,22 @@ namespace Wodsoft.Net.Sockets
             //服务器端验证完成
             _IsAuthenticated = true;
 
-            //通过加密流接收成功信息
-            byte[] successData = new byte[_SuccessData.Length];
-            length = 0;
-            while (length != successData.Length)
-                length += Read(successData, length, successData.Length - length);
-            //检测成功数据是否正确
-            for (int i = 0; i < _SuccessData.Length; i++)
-                if (_SuccessData[i] != successData[i])
-                    throw new AuthenticationException("验证加密成功信息失败。");
+            ////通过加密流接收成功信息
+            //byte[] successData = new byte[_SuccessData.Length];
+            //length = 0;
+            //while (length != successData.Length)
+            //    length += Read(successData, length, successData.Length - length);
+            ////检测成功数据是否正确
+            //for (int i = 0; i < _SuccessData.Length; i++)
+            //    if (_SuccessData[i] != successData[i])
+            //        throw new AuthenticationException("验证加密成功信息失败。");
             _IsMutuallyAuthenticated = true;
 
 
-            //通过加密流发送成功信息
-            Write(_SuccessData, 0, _SuccessData.Length);
+            ////通过加密流发送成功信息
+            //Write(_SuccessData, 0, _SuccessData.Length);
         }
-        
+
         public async Task AuthenticateAsServerAsync()
         {
             if (IsAuthenticated)
@@ -458,20 +465,39 @@ namespace Wodsoft.Net.Sockets
             //服务器端验证完成
             _IsAuthenticated = true;
 
-            //通过加密流接收成功信息
-            byte[] successData = new byte[_SuccessData.Length];
-            length = 0;
-            while (length != successData.Length)
-                length += await ReadAsync(successData, length, successData.Length - length);
-            //检测成功数据是否正确
-            for (int i = 0; i < _SuccessData.Length; i++)
-                if (_SuccessData[i] != successData[i])
-                    throw new AuthenticationException("验证加密成功信息失败。");
+            ////通过加密流接收成功信息
+            //byte[] successData = new byte[_SuccessData.Length];
+            //length = 0;
+            //while (length != successData.Length)
+            //    length += await ReadAsync(successData, length, successData.Length - length);
+            ////检测成功数据是否正确
+            //for (int i = 0; i < _SuccessData.Length; i++)
+            //    if (_SuccessData[i] != successData[i])
+            //        throw new AuthenticationException("验证加密成功信息失败。");
             _IsMutuallyAuthenticated = true;
 
+            ////通过加密流发送成功信息
+            //await WriteAsync(_SuccessData, 0, _SuccessData.Length);
+        }
 
-            //通过加密流发送成功信息
-            await WriteAsync(_SuccessData, 0, _SuccessData.Length);
+        public IAsyncResult BeginAuthenticateAsServer(AsyncCallback callback, object state)
+        {
+            if (IsAuthenticated)
+                throw new InvalidOperationException("已经通过了身份验证。");
+            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
+            AuthenticateAsServerAsync().ContinueWith(task =>
+            {
+                asyncResult.IsCompleted = true;
+                if (callback != null)
+                    callback(asyncResult);
+                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
+            });
+            return asyncResult;
+        }
+
+        public void EndAuthenticateAsServer(IAsyncResult ar)
+        {
+
         }
 
         private void GenerateKey()
