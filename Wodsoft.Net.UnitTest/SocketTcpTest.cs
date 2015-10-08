@@ -35,6 +35,30 @@ namespace Wodsoft.Net.UnitTest
             Assert.IsFalse(listener.IsStarted);
         }
 
+        [TestMethod]
+        public void EncryptedTcpSendReceiveTest()
+        {
+            SocketHandler16 socketHandler = new SocketHandler16();
+            SocketTcpListener<byte[], byte[]> listener = new SocketTcpListener<byte[], byte[]>(socketHandler);
+            listener.StreamProvider = new SocketEncryptedStreamProvider(true);
+            listener.Port = 7000;
+            listener.AcceptCompleted += listener_AcceptCompleted;
+            listener.Start();
+            Assert.IsTrue(listener.IsStarted);
+
+            SocketTcpClient<byte[], byte[]> client = new SocketTcpClient<byte[], byte[]>(socketHandler, new SocketEncryptedStreamProvider(false));
+            Assert.IsFalse(client.IsConnected);
+            client.DisconnectCompleted += client_DisconnectCompleted;
+            byte[] data = new byte[] { 100, 255, 80, 64 };
+            Assert.IsTrue(client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7000)));
+            Assert.IsTrue(client.IsConnected);
+            client.ReceiveCycle();
+            Assert.IsTrue(client.Send(data));
+
+            listener.Stop();
+            Assert.IsFalse(listener.IsStarted);
+        }
+
         void client_DisconnectCompleted(object sender, SocketEventArgs e)
         {
             ISocket<byte[], byte[]> socket = (ISocket<byte[], byte[]>)sender;
