@@ -67,17 +67,17 @@ namespace Wodsoft.Net.Sockets
         /// <summary>
         /// 初始化Socket连接。调用于Socket连接建立后。
         /// </summary>
-        protected virtual void Initialize()
+        public virtual void Initialize()
         {
             HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.GetStream(Socket), DataBag);
         }
 
-        protected virtual async Task InitializeAsync()
+        public virtual async Task InitializeAsync()
         {
             HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket), DataBag);
         }
 
-        protected virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
+        public virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
         {
             SocketAsyncResult asyncResult = new SocketAsyncResult(state);
             SocketAsyncState asyncState = new SocketAsyncState();
@@ -93,13 +93,13 @@ namespace Wodsoft.Net.Sockets
             SocketAsyncResult asyncResult = (SocketAsyncResult)asyncState.AsyncResult;
             HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar), DataBag);
             asyncResult.IsCompleted = true;
-            asyncResult.CompletedSynchronously = true;
+            asyncResult.CompletedSynchronously = false;
             if (asyncState.AsyncCallback != null)
                 asyncState.AsyncCallback(asyncResult);
             ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
         }
 
-        protected virtual void EndInitialize(IAsyncResult ar)
+        public virtual void EndInitialize(IAsyncResult ar)
         {
 
         }
