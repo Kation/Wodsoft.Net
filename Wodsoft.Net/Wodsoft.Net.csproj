@@ -50,6 +50,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\Converters\SbyteConverter.cs" />
+    <Compile Include="Protocol\Converters\ByteConverter.cs" />
+    <Compile Include="Protocol\IValueConverter.cs" />
+    <Compile Include="Protocol\ProtocolAttribute.cs" />
+    <Compile Include="Protocol\ProtocolChannel.cs" />
+    <Compile Include="Protocol\ProtocolContext.cs" />
+    <Compile Include="Protocol\ProtocolConverter.cs" />
+    <Compile Include="Protocol\ProtocolManager.cs" />
+    <Compile Include="Protocol\ProtocolMapping.cs" />
+    <Compile Include="Protocol\ProtocolMappingResult.cs" />
+    <Compile Include="Protocol\ProtocolPackage.cs" />
+    <Compile Include="Protocol\ProtocolSession.cs" />
     <Compile Include="Proxy\HttpProxy.cs" />
     <Compile Include="Sockets\ISocket.cs">
       <SubType>Code</SubType>
@@ -69,6 +81,7 @@
     <Compile Include="Sockets\SocketBufferedStream.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sockets\SocketByteHandler.cs" />
     <Compile Include="Sockets\SocketDataBag.cs">
       <SubType>Code</SubType>
     </Compile>

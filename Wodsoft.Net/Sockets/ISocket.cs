@@ -52,6 +52,11 @@ namespace Wodsoft.Net.Sockets
         /// 获取本地终结点地址。
         /// </summary>
         IPEndPoint LocalEndPoint { get; }
+
+        /// <summary>
+        /// 获取字典。
+        /// </summary>
+        dynamic DataBag { get; }
     }
 
     /// <summary>
@@ -114,7 +119,7 @@ namespace Wodsoft.Net.Sockets
         /// 循环接收数据。
         /// </summary>
         /// <returns></returns>
-        Task ReceiveCycle();
+        void ReceiveCycle();
         /// <summary>
         /// 接收完成时引发事件。
         /// </summary>

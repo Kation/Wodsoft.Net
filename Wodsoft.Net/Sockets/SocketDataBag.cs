@@ -105,9 +105,17 @@ namespace Wodsoft.Net.Sockets
 
         #region Dynamic
 
+        public override bool TryConvert(ConvertBinder binder, out object result)
+        {
+            return base.TryConvert(binder, out result);
+        }
+
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            _Dictionary.TryGetValue(binder.Name, out result);
+            if (!_Dictionary.TryGetValue(binder.Name, out result) && binder.ReturnType.IsValueType)
+            {
+                result = Activator.CreateInstance(binder.ReturnType);
+            }
             return true;
         }
 

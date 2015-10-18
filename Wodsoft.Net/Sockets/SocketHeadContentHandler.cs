@@ -132,6 +132,15 @@ namespace Wodsoft.Net.Sockets
                         state.AsyncCallBack(state.AsyncResult);
                     return;
                 }
+                if (state.Context.ReceiveContext.IsFailed)
+                {
+                    state.AsyncResult.IsCompleted = true;
+                    state.AsyncResult.IsSuccess = false;
+                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
+                    if (state.AsyncCallBack != null)
+                        state.AsyncCallBack(state.AsyncResult);
+                    return;
+                }
                 state.Context.ReceiveContext.ByteBuffer = new byte[ContentBufferLength];
                 try
                 {
@@ -332,6 +341,11 @@ namespace Wodsoft.Net.Sockets
             bool headProcessCompleted = CheckHeadCompleted(context.ReceiveContext);
             if (!headProcessCompleted)
             {
+                if (context.ReceiveContext.IsFailed)
+                {
+                    context.ReceiveContext.Reset();
+                    return default(TOut);
+                }
                 byte[] buffer = new byte[HeadBufferLength];
                 long position;
                 while (!headProcessCompleted)
@@ -364,6 +378,11 @@ namespace Wodsoft.Net.Sockets
             bool contentProcessCompleted = CheckContentCompleted(context.ReceiveContext);
             if (!contentProcessCompleted)
             {
+                if (context.ReceiveContext.IsFailed)
+                {
+                    context.ReceiveContext.Reset();
+                    return default(TOut);
+                }
                 byte[] buffer = new byte[ContentBufferLength];
                 long position;
                 while (!contentProcessCompleted)
@@ -431,7 +450,13 @@ namespace Wodsoft.Net.Sockets
             byte[] head = ProcessSendHead(state.Context.SendContext);
             try
             {
-                state.Context.Stream.BeginWrite(head, 0, head.Length, EndWriteHead, state);
+                if (head != null)
+                    state.Context.Stream.BeginWrite(head, 0, head.Length, EndWriteHead, state);
+                else
+                {
+                    head = ProcessSendContent(state.Context.SendContext);
+                    state.Context.Stream.BeginWrite(head, 0, head.Length, EndWriteContent, state);
+                }
             }
             catch
             {
@@ -509,7 +534,8 @@ namespace Wodsoft.Net.Sockets
             try
             {
                 byte[] head = ProcessSendHead(context.SendContext);
-                context.Stream.Write(head, 0, head.Length);
+                if (head != null)
+                    context.Stream.Write(head, 0, head.Length);
                 byte[] content = ProcessSendContent(context.SendContext);
                 context.Stream.Write(content, 0, content.Length);
             }
@@ -529,7 +555,8 @@ namespace Wodsoft.Net.Sockets
             try
             {
                 byte[] head = ProcessSendHead(context.SendContext);
-                await context.Stream.WriteAsync(head, 0, head.Length);
+                if (head != null)
+                    await context.Stream.WriteAsync(head, 0, head.Length);
                 byte[] content = ProcessSendContent(context.SendContext);
                 await context.Stream.WriteAsync(content, 0, content.Length);
             }

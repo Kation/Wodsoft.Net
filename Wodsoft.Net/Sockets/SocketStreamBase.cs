@@ -50,7 +50,7 @@ namespace Wodsoft.Net.Sockets
         /// <summary>
         /// 获取Socket处理上下文。
         /// </summary>
-        protected SocketStreamHandlerContext<TIn, TOut> HandlerContext { get; private set; }
+        public SocketStreamHandlerContext<TIn, TOut> HandlerContext { get; private set; }
 
         /// <summary>
         /// 获取Socket网络流提供者。
@@ -309,7 +309,7 @@ namespace Wodsoft.Net.Sockets
                 state.AsyncCallback(asyncResult);
         }
 
-        public async Task ReceiveCycle()
+        public async void ReceiveCycle()
         {
             //是否已连接
             if (!IsConnected)

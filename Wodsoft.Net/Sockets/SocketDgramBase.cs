@@ -127,7 +127,7 @@ namespace Wodsoft.Net.Sockets
             throw new NotSupportedException();
         }
 
-        public Task ReceiveCycle()
+        public void ReceiveCycle()
         {
             throw new NotSupportedException();
         }

@@ -11,6 +11,7 @@ namespace Wodsoft.Net.Sockets
     public class SocketProcessContext : IDisposable
     {
         private ManualResetEvent _Event;
+        private Mutex _Mutex;
         private bool _WorkStatus;
 
         protected SocketProcessContext(Stream source)
@@ -21,6 +22,7 @@ namespace Wodsoft.Net.Sockets
             DataBag = new SocketDataBag();
             _Event = new ManualResetEvent(false);
             _WorkStatus = false;
+            _Mutex = new Mutex();
         }
 
         public Stream Source { get; private set; }
@@ -31,22 +33,7 @@ namespace Wodsoft.Net.Sockets
 
         public void CheckQueue()
         {
-            while (true)
-            {
-                Monitor.Enter(_Event);
-                if (_WorkStatus)
-                {
-                    Monitor.Exit(_Event);
-                    _Event.WaitOne();
-                }
-                else
-                {
-                    _Event.Reset();
-                    _WorkStatus = true;
-                    Monitor.Exit(_Event);
-                    return;
-                }
-            }
+            _Mutex.WaitOne();
         }
 
         public Task CheckQueueAsync(Action callback)
@@ -109,10 +96,11 @@ namespace Wodsoft.Net.Sockets
 
         public virtual void Reset()
         {
+            if (!IsFailed)
+                _Mutex.ReleaseMutex();
             DataBag.Clear();
             _WorkStatus = false;
             IsFailed = false;
-            _Event.Set();
         }
 
         public void Dispose()
