@@ -41,40 +41,5 @@ namespace Wodsoft.Net.Sockets
                 await stream.AuthenticateAsClientAsync();
             return stream;
         }
-
-        public IAsyncResult BeginGetStream(Socket socket, AsyncCallback callback, object state)
-        {
-            if (!socket.Connected)
-                throw new ArgumentException("Socket未连接。");
-            SocketAsyncResult<Stream> asyncResult = new SocketAsyncResult<Stream>(state);
-            var stream = new SocketEncryptedStream(new NetworkStream(socket), 214);
-            if (IsServer)
-                stream.BeginAuthenticateAsServer(ar =>
-                {
-                    asyncResult.Data = stream;
-                    asyncResult.IsCompleted = true;
-                    if (callback != null)
-                        callback(asyncResult);
-                    ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-                }, null);
-            else
-                stream.BeginAuthenticateAsClient(ar =>
-                {
-                    asyncResult.Data = stream;
-                    asyncResult.IsCompleted = true;
-                    if (callback != null)
-                        callback(asyncResult);
-                    ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-                }, null);
-            return asyncResult;
-        }
-
-        public Stream EndGetStream(IAsyncResult ar)
-        {
-            SocketAsyncResult<Stream> asyncResult = (SocketAsyncResult<Stream>)ar;
-            if (asyncResult == null)
-                throw new ArgumentException("异步结果异常。");
-            return asyncResult.Data;
-        }
     }
 }

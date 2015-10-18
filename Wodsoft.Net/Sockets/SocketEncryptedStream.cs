@@ -170,38 +170,7 @@ namespace Wodsoft.Net.Sockets
                 return t.Result;
             });
         }
-
-        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
-        {
-            SocketAsyncResult<int> asyncResult = new SocketAsyncResult<int>(state);
-            SocketAsyncState<Tuple<byte[], int, int>> asyncState = new SocketAsyncState<Tuple<byte[], int, int>>();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            base.BeginRead(buffer, offset, count, EndBeginRead, asyncState);
-            return asyncResult;
-        }
-
-        private void EndBeginRead(IAsyncResult ar)
-        {
-            SocketAsyncState<Tuple<byte[], int, int>> asyncState = (SocketAsyncState<Tuple<byte[], int, int>>)ar.AsyncState;
-            var length = InnerStream.EndRead(ar);
-            if (length > 0)
-                DecryptData(asyncState.Data.Item1, asyncState.Data.Item2, length);
-            SocketAsyncResult<int> asyncResult = (SocketAsyncResult<int>)asyncState.AsyncResult;
-            asyncResult.Data = length;
-            asyncResult.IsCompleted = true;
-            if (asyncState.AsyncCallback != null)
-                asyncState.AsyncCallback(asyncResult);
-        }
-
-        public override int EndRead(IAsyncResult ar)
-        {
-            SocketAsyncResult<int> asyncResult = ar as SocketAsyncResult<int>;
-            if (asyncResult == null)
-                throw new ArgumentException("传入的异步结果错误。");
-            return asyncResult.Data;
-        }
-
+        
         public override int ReadByte()
         {
             int data = InnerStream.ReadByte();
@@ -226,18 +195,7 @@ namespace Wodsoft.Net.Sockets
             buffer = EncryptData(buffer, offset, count);
             return InnerStream.WriteAsync(buffer, 0, count, cancellationToken);
         }
-
-        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
-        {
-            buffer = EncryptData(buffer, offset, count);
-            return InnerStream.BeginWrite(buffer, 0, count, callback, state);
-        }
-
-        public override void EndWrite(IAsyncResult asyncResult)
-        {
-            InnerStream.EndWrite(asyncResult);
-        }
-
+        
         public override void WriteByte(byte value)
         {
             value ^= Keys[KeyWriteOffset];
@@ -370,27 +328,7 @@ namespace Wodsoft.Net.Sockets
             //        throw new AuthenticationException("验证加密成功信息失败。");
             _IsMutuallyAuthenticated = true;
         }
-
-        public IAsyncResult BeginAuthenticateAsClient(AsyncCallback callback, object state)
-        {
-            if (IsAuthenticated)
-                throw new InvalidOperationException("已经通过了身份验证。");
-            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
-            AuthenticateAsClientAsync().ContinueWith(task =>
-            {
-                asyncResult.IsCompleted = true;
-                if (callback != null)
-                    callback(asyncResult);
-                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            });
-            return asyncResult;
-        }
-
-        public void EndAuthenticateAsClient(IAsyncResult ar)
-        {
-
-        }
-
+        
         public void AuthenticateAsServer()
         {
             if (IsAuthenticated)
@@ -479,27 +417,7 @@ namespace Wodsoft.Net.Sockets
             ////通过加密流发送成功信息
             //await WriteAsync(_SuccessData, 0, _SuccessData.Length);
         }
-
-        public IAsyncResult BeginAuthenticateAsServer(AsyncCallback callback, object state)
-        {
-            if (IsAuthenticated)
-                throw new InvalidOperationException("已经通过了身份验证。");
-            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
-            AuthenticateAsServerAsync().ContinueWith(task =>
-            {
-                asyncResult.IsCompleted = true;
-                if (callback != null)
-                    callback(asyncResult);
-                ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            });
-            return asyncResult;
-        }
-
-        public void EndAuthenticateAsServer(IAsyncResult ar)
-        {
-
-        }
-
+        
         private void GenerateKey()
         {
             Random rnd = new Random();

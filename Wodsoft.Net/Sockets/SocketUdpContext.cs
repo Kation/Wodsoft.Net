@@ -30,15 +30,10 @@ namespace Wodsoft.Net.Sockets
         {
             return _Socket.SendTo(data, flags, RemoteEndPoint) == data.Length;
         }
-
-        public IAsyncResult BeginSend(byte[] data,SocketFlags flags, AsyncCallback callback, object state)
+        
+        public async Task<bool> SendAsync(byte[] data, SocketFlags flags)
         {
-            return _Socket.BeginSendTo(data, 0, data.Length, flags, RemoteEndPoint, callback, state);
-        }
-
-        public bool EndSend(IAsyncResult ar)
-        {
-            return _Socket.EndSendTo(ar) > 0;
+            return await Task.Factory.FromAsync<int>(_Socket.BeginSendTo(data, 0, data.Length, flags, RemoteEndPoint, null, null), _Socket.EndSendTo) == data.Length;
         }
 
         public void OnReceive(byte[] data, int length)

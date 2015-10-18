@@ -72,12 +72,6 @@
     <Compile Include="Sockets\ISocketStreamProvider.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sockets\SocketAsyncResult.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sockets\SocketAsyncState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Sockets\SocketBufferedStream.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -95,9 +89,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketHandler32.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sockets\SocketHandlerAsyncResult.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sockets\SocketHeadContentHandler.cs">

@@ -25,20 +25,6 @@ namespace Wodsoft.Net.Sockets
         Task DisconnectAsync();
 
         /// <summary>
-        /// 异步开始断开连接。
-        /// </summary>
-        /// <param name="callback">异步回调。</param>
-        /// <param name="state">异步状态对象。</param>
-        /// <returns>异步结果。</returns>
-        IAsyncResult BeginDisconnect(AsyncCallback callback, object state);
-
-        /// <summary>
-        /// 异步结束断开连接。
-        /// </summary>
-        /// <param name="ar">异步结果。</param>
-        void EndDisconnect(IAsyncResult ar);
-
-        /// <summary>
         /// 断开完成时引发事件。
         /// </summary>
         event EventHandler<SocketEventArgs> DisconnectCompleted;
@@ -79,20 +65,6 @@ namespace Wodsoft.Net.Sockets
         /// <returns>发送是否成功，True为成功，False为失败。</returns>
         Task<bool> SendAsync(TIn data);
         /// <summary>
-        /// 异步开始发送数据。
-        /// </summary>
-        /// <param name="data">要发送的数据。</param>
-        /// <param name="callback">异步回调。</param>
-        /// <param name="state">异步状态对象。</param>
-        /// <returns>异步结果。</returns>
-        IAsyncResult BeginSend(TIn data, AsyncCallback callback, object state);
-        /// <summary>
-        /// 异步结束发送数据。
-        /// </summary>
-        /// <param name="ar">异步结果。</param>
-        /// <returns>发送是否成功，True为成功，False为失败。</returns>
-        bool EndSend(IAsyncResult ar);
-        /// <summary>
         /// 接收数据。
         /// </summary>
         /// <returns>收到的数据。</returns>
@@ -102,19 +74,6 @@ namespace Wodsoft.Net.Sockets
         /// </summary>
         /// <returns>接收数据任务。</returns>
         Task<TOut> ReceiveAsync();
-        /// <summary>
-        /// 异步开始接收数据。
-        /// </summary>
-        /// <param name="callback">异步回调。</param>
-        /// <param name="state">异步状态对象。</param>
-        /// <returns>异步结果。</returns>
-        IAsyncResult BeginReceive(AsyncCallback callback, object state);
-        /// <summary>
-        /// 异步结束接收数据。
-        /// </summary>
-        /// <param name="ar">异步结果。</param>
-        /// <returns>收到的数据。</returns>
-        TOut EndReceive(IAsyncResult ar);
         /// <summary>
         /// 循环接收数据。
         /// </summary>

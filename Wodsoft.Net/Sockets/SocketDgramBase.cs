@@ -61,46 +61,13 @@ namespace Wodsoft.Net.Sockets
             if (data == null)
                 throw new ArgumentNullException("data");
             var buffer = Handler.ConvertSendData(data);
-            if (await Task.Factory.FromAsync<bool>(Context.BeginSend(buffer, SocketFlags.None, null, null), Context.EndSend))
+            if (await Context.SendAsync(buffer, SocketFlags.None))
             {
                 if (SendCompleted != null)
                     SendCompleted(this, new SocketEventArgs<TIn>(data, SocketAsyncOperation.SendTo));
                 return true;
             }
             return false;
-        }
-
-        public IAsyncResult BeginSend(TIn data, AsyncCallback callback, object state)
-        {
-            if (data == null)
-                throw new ArgumentNullException("data");
-            var buffer = Handler.ConvertSendData(data);
-            SocketAsyncResult<bool> result = new SocketAsyncResult<bool>(state);
-            SocketAsyncState<TIn> asyncState = new SocketAsyncState<TIn>();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = result;
-            asyncState.Data = data;
-            Context.BeginSend(buffer, SocketFlags.None, SendCallback, asyncState);
-            return result;
-        }
-
-        private void SendCallback(IAsyncResult ar)
-        {
-            SocketAsyncState<TIn> state = (SocketAsyncState<TIn>)ar.AsyncState;
-            var result = Context.EndSend(ar);
-            if (result && SendCompleted != null)
-                SendCompleted(this, new SocketEventArgs<TIn>(state.Data, SocketAsyncOperation.SendTo));
-            ((SocketAsyncResult<bool>)state.AsyncResult).Data = result;
-            if (state.AsyncCallback != null)
-                state.AsyncCallback(state.AsyncResult);
-        }
-
-        public bool EndSend(IAsyncResult ar)
-        {
-            SocketAsyncResult<bool> result = ar as SocketAsyncResult<bool>;
-            if (result == null)
-                throw new ArgumentException("异步结果不属于该Socket。");
-            return result.Data;
         }
 
         #endregion
@@ -113,16 +80,6 @@ namespace Wodsoft.Net.Sockets
         }
 
         public Task<TOut> ReceiveAsync()
-        {
-            throw new NotSupportedException();
-        }
-
-        public IAsyncResult BeginReceive(AsyncCallback callback, object state)
-        {
-            throw new NotSupportedException();
-        }
-
-        public TOut EndReceive(IAsyncResult ar)
         {
             throw new NotSupportedException();
         }
@@ -149,10 +106,6 @@ namespace Wodsoft.Net.Sockets
         public abstract void Disconnect();
 
         public abstract Task DisconnectAsync();
-
-        public abstract IAsyncResult BeginDisconnect(AsyncCallback callback, object state);
-
-        public abstract void EndDisconnect(IAsyncResult ar);
 
         protected void OnDisconnected()
         {

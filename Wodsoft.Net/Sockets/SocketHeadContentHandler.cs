@@ -33,230 +33,7 @@ namespace Wodsoft.Net.Sockets
                 return false;
             return ProcessReceiveContent(context);
         }
-
-        public IAsyncResult BeginReceive(SocketStreamHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
-        {
-            //context不能为null
-            if (context == null)
-                throw new ArgumentNullException("context");
-
-            SocketHandlerAsyncResult<TIn, TOut> result = new SocketHandlerAsyncResult<TIn, TOut>(context, state);
-
-            //初始化SocketHandlerState
-            SocketHandlerState handlerState = new SocketHandlerState();
-            handlerState.Context = context;
-            handlerState.AsyncResult = result;
-            handlerState.AsyncCallBack = callback;
-
-            context.ReceiveContext.CheckQueueAsync(BeginReceiveCallback, handlerState);
-            return result;
-        }
-
-        private void BeginReceiveCallback(SocketHandlerState state)
-        {
-            bool headCompleted = CheckHeadCompleted(state.Context.ReceiveContext);
-            if (headCompleted)
-            {
-                if (CheckContentCompleted(state.Context.ReceiveContext))
-                {
-                    state.AsyncResult.CompletedSynchronously = true;
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = true;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-                state.Context.ReceiveContext.ByteBuffer = new byte[ContentBufferLength];
-            }
-            else
-                state.Context.ReceiveContext.ByteBuffer = new byte[HeadBufferLength];
-
-            try
-            {
-                if (headCompleted)
-                    state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadContent, state);
-                else
-                    state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadHead, state);
-            }
-            catch
-            {
-                state.AsyncResult.CompletedSynchronously = true;
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-            }
-
-        }
-
-        private void EndReadHead(IAsyncResult ar)
-        {
-            SocketHandlerState state = (SocketHandlerState)ar.AsyncState;
-            int length;
-            try
-            {
-                length = state.Context.Stream.EndRead(ar);
-            }
-            catch
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                return;
-            }
-            if (length == 0)
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                return;
-            }
-            long position = state.Context.ReceiveContext.Buffer.Position;
-            state.Context.ReceiveContext.Buffer.Position = state.Context.ReceiveContext.Buffer.Length;
-            state.Context.ReceiveContext.Buffer.Write(state.Context.ReceiveContext.ByteBuffer, 0, length);
-            state.Context.ReceiveContext.Buffer.Position = position;
-            if (ProcessReceiveHead(state.Context.ReceiveContext))
-            {
-                if (CheckContentCompleted(state.Context.ReceiveContext))
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = true;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-                if (state.Context.ReceiveContext.IsFailed)
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-                state.Context.ReceiveContext.ByteBuffer = new byte[ContentBufferLength];
-                try
-                {
-                    state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadContent, state);
-                }
-                catch
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-            }
-            else
-            {
-                if (state.Context.ReceiveContext.IsFailed)
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-                try
-                {
-                    state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadHead, state);
-                }
-                catch
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-            }
-        }
-
-        private void EndReadContent(IAsyncResult ar)
-        {
-            SocketHandlerState state = (SocketHandlerState)ar.AsyncState;
-            int length;
-            try
-            {
-                length = state.Context.Stream.EndRead(ar);
-            }
-            catch
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                return;
-            }
-            if (length == 0)
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                return;
-            }
-            long position = state.Context.ReceiveContext.Buffer.Position;
-            state.Context.ReceiveContext.Buffer.Position = state.Context.ReceiveContext.Buffer.Length;
-            state.Context.ReceiveContext.Buffer.Write(state.Context.ReceiveContext.ByteBuffer, 0, length);
-            state.Context.ReceiveContext.Buffer.Position = position;
-            if (ProcessReceiveContent(state.Context.ReceiveContext))
-            {
-                state.AsyncResult.IsCompleted = true;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-            }
-            else
-            {
-                if (state.Context.ReceiveContext.IsFailed)
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-                try
-                {
-                    state.Context.Stream.BeginRead(state.Context.ReceiveContext.ByteBuffer, 0, state.Context.ReceiveContext.ByteBuffer.Length, EndReadContent, state);
-                }
-                catch
-                {
-                    state.AsyncResult.IsCompleted = true;
-                    state.AsyncResult.IsSuccess = false;
-                    ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                    if (state.AsyncCallBack != null)
-                        state.AsyncCallBack(state.AsyncResult);
-                    return;
-                }
-            }
-        }
-
-        public TOut EndReceive(IAsyncResult asyncResult)
-        {
-            SocketHandlerAsyncResult<TIn, TOut> result = asyncResult as SocketHandlerAsyncResult<TIn, TOut>;
-            if (result == null)
-                throw new InvalidOperationException("异步结果不属于该处理器。");
-            TOut value = result.Context.ReceiveContext.Result;
-            result.Context.ReceiveContext.Reset();
-            return value;
-        }
-
+        
         public TOut Receive(SocketStreamHandlerContext<TIn, TOut> context)
         {
             if (context == null)
@@ -420,113 +197,7 @@ namespace Wodsoft.Net.Sockets
         protected abstract bool ProcessReceiveHead(SocketReceiveContext<TOut> context);
 
         protected abstract bool ProcessReceiveContent(SocketReceiveContext<TOut> context);
-
-        public IAsyncResult BeginSend(TIn data, SocketStreamHandlerContext<TIn, TOut> context, AsyncCallback callback, object state)
-        {
-            //data不能为null
-            if (data == null)
-                throw new ArgumentNullException("data");
-            //context不能为null
-            if (context == null)
-                throw new ArgumentNullException("context");
-
-
-            SocketHandlerAsyncResult<TIn, TOut> result = new SocketHandlerAsyncResult<TIn, TOut>(context, state);
-
-            SocketHandlerState handlerState = new SocketHandlerState();
-            handlerState.Context = context;
-            handlerState.AsyncResult = result;
-            handlerState.AsyncCallBack = callback;
-
-            context.SendContext.CheckQueueAsync(BeginSendCallback, handlerState, data);
-
-            return result;
-        }
-
-        private void BeginSendCallback(SocketHandlerState state, TIn data)
-        {
-            state.Context.SendContext.Data = data;
-
-            byte[] head = ProcessSendHead(state.Context.SendContext);
-            try
-            {
-                if (head != null)
-                    state.Context.Stream.BeginWrite(head, 0, head.Length, EndWriteHead, state);
-                else
-                {
-                    head = ProcessSendContent(state.Context.SendContext);
-                    state.Context.Stream.BeginWrite(head, 0, head.Length, EndWriteContent, state);
-                }
-            }
-            catch
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-            }
-        }
-
-        private void EndWriteHead(IAsyncResult ar)
-        {
-            SocketHandlerState state = (SocketHandlerState)ar.AsyncState;
-            try
-            {
-                state.Context.Stream.EndWrite(ar);
-            }
-            catch
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                return;
-            }
-            byte[] content = ProcessSendContent(state.Context.SendContext);
-            try
-            {
-                state.Context.Stream.BeginWrite(content, 0, content.Length, EndWriteContent, state);
-            }
-            catch
-            {
-                state.AsyncResult.IsCompleted = true;
-                state.AsyncResult.IsSuccess = false;
-                if (state.AsyncCallBack != null)
-                    state.AsyncCallBack(state.AsyncResult);
-                ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-                return;
-            }
-        }
-
-        private void EndWriteContent(IAsyncResult ar)
-        {
-            SocketHandlerState state = (SocketHandlerState)ar.AsyncState;
-            try
-            {
-                state.Context.Stream.EndWrite(ar);
-                state.AsyncResult.IsSuccess = true;
-            }
-            catch
-            {
-                state.AsyncResult.IsSuccess = false;
-            }
-            state.AsyncResult.IsCompleted = true;
-            if (state.AsyncCallBack != null)
-                state.AsyncCallBack(state.AsyncResult);
-            ((AutoResetEvent)state.AsyncResult.AsyncWaitHandle).Set();
-        }
-
-        public bool EndSend(IAsyncResult asyncResult)
-        {
-            if (asyncResult == null)
-                throw new ArgumentNullException("asyncResult");
-            SocketHandlerAsyncResult<TIn, TOut> result = asyncResult as SocketHandlerAsyncResult<TIn, TOut>;
-            result.Context.SendContext.Reset();
-            return result.IsSuccess;
-        }
-
+        
         public bool Send(TIn data, SocketStreamHandlerContext<TIn, TOut> context)
         {
             context.SendContext.CheckQueue();
@@ -541,10 +212,12 @@ namespace Wodsoft.Net.Sockets
             }
             catch
             {
-                context.SendContext.Reset();
                 return false;
             }
-            context.SendContext.Reset();
+            finally
+            {
+                context.SendContext.Reset();
+            }
             return true;
         }
 
@@ -562,31 +235,17 @@ namespace Wodsoft.Net.Sockets
             }
             catch
             {
-                context.SendContext.Reset();
                 return false;
             }
-            context.SendContext.Reset();
+            finally
+            {
+                context.SendContext.Reset();
+            }
             return true;
         }
 
         protected abstract byte[] ProcessSendHead(SocketSendContext<TIn> context);
 
         protected abstract byte[] ProcessSendContent(SocketSendContext<TIn> context);
-
-        private class SocketHandlerState
-        {
-            /// <summary>
-            /// 数据
-            /// </summary>
-            public SocketStreamHandlerContext<TIn, TOut> Context { get; set; }
-            /// <summary>
-            /// 异步结果
-            /// </summary>
-            public SocketHandlerAsyncResult<TIn, TOut> AsyncResult { get; set; }
-            /// <summary>
-            /// 异步回调函数
-            /// </summary>
-            public AsyncCallback AsyncCallBack { get; set; }
-        }
     }
 }

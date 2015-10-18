@@ -85,37 +85,6 @@ namespace Wodsoft.Net.Sockets
             Disconnected(true);
         }
 
-        public override IAsyncResult BeginDisconnect(AsyncCallback callback, object state)
-        {
-            //判断是否已连接
-            if (!IsConnected)
-                throw new SocketException(10057);
-            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
-            SocketAsyncState asyncState = new SocketAsyncState();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            Socket.BeginDisconnect(true, EndBeginDisconnect, asyncState);
-            return asyncResult;
-        }
-
-        public override void EndDisconnect(IAsyncResult ar)
-        {
-
-        }
-
-        private void EndBeginDisconnect(IAsyncResult ar)
-        {
-            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
-            SocketAsyncResult asyncResult = (SocketAsyncResult)state.AsyncResult;
-            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
-            asyncResult.IsCompleted = true;
-            Socket.EndDisconnect(ar);
-            Disconnected(true);
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            if (state.AsyncCallback != null)
-                state.AsyncCallback(asyncResult);
-        }
-
         #endregion
         
         #region 其它

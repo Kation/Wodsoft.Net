@@ -77,33 +77,6 @@ namespace Wodsoft.Net.Sockets
             HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(await StreamProvider.GetStreamAsync(Socket), DataBag);
         }
 
-        public virtual IAsyncResult BeginInitialize(AsyncCallback callback, object state)
-        {
-            SocketAsyncResult asyncResult = new SocketAsyncResult(state);
-            SocketAsyncState asyncState = new SocketAsyncState();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            StreamProvider.BeginGetStream(Socket, EndGetStream, asyncState);
-            return asyncResult;
-        }
-
-        private void EndGetStream(IAsyncResult ar)
-        {
-            SocketAsyncState asyncState = (SocketAsyncState)ar.AsyncState;
-            SocketAsyncResult asyncResult = (SocketAsyncResult)asyncState.AsyncResult;
-            HandlerContext = new SocketStreamHandlerContext<TIn, TOut>(StreamProvider.EndGetStream(ar), DataBag);
-            asyncResult.IsCompleted = true;
-            asyncResult.CompletedSynchronously = false;
-            if (asyncState.AsyncCallback != null)
-                asyncState.AsyncCallback(asyncResult);
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-        }
-
-        public virtual void EndInitialize(IAsyncResult ar)
-        {
-
-        }
-
         #endregion
 
         #region 断开连接
@@ -117,11 +90,7 @@ namespace Wodsoft.Net.Sockets
         /// 异步断开与服务器的连接。
         /// </summary>
         public abstract Task DisconnectAsync();
-
-        public abstract IAsyncResult BeginDisconnect(AsyncCallback callback, object state);
-
-        public abstract void EndDisconnect(IAsyncResult ar);
-
+        
         /// <summary>
         /// 断开连接后调用的方法。
         /// </summary>
@@ -190,47 +159,6 @@ namespace Wodsoft.Net.Sockets
             }
         }
 
-        public IAsyncResult BeginSend(TIn data, AsyncCallback callback, object state)
-        {
-            //是否已连接
-            if (!IsConnected)
-                throw new SocketException(10057);
-            //发送的数据不能为null
-            if (data == null)
-                throw new ArgumentNullException("data");
-
-            SocketAsyncResult<bool> asyncResult = new SocketAsyncResult<bool>(state);
-            SocketAsyncState<TIn> asyncState = new SocketAsyncState<TIn>();
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            asyncState.Data = data;
-            Handler.BeginSend(data, HandlerContext, EndBeginSend, asyncState);
-            return asyncResult;
-        }
-
-        public bool EndSend(IAsyncResult ar)
-        {
-            SocketAsyncResult<bool> asyncResult = ar as SocketAsyncResult<bool>;
-            if (asyncResult == null)
-                throw new ArgumentException("异步结果不属于该Socket。");
-            return asyncResult.Data;
-        }
-
-        private void EndBeginSend(IAsyncResult ar)
-        {
-            SocketAsyncState<TIn> state = (SocketAsyncState<TIn>)ar.AsyncState;
-            SocketAsyncResult<bool> asyncResult = (SocketAsyncResult<bool>)state.AsyncResult;
-            bool success = Handler.EndSend(ar);
-            asyncResult.Data = success;
-            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
-            asyncResult.IsCompleted = true;
-            if (success && SendCompleted != null)
-                SendCompleted(this, new SocketEventArgs<TIn>(state.Data, SocketAsyncOperation.Send));
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            if (state.AsyncCallback != null)
-                state.AsyncCallback(state.AsyncResult);
-        }
-
         #endregion
 
         #region 接收数据
@@ -265,48 +193,6 @@ namespace Wodsoft.Net.Sockets
                 if (ReceiveCompleted != null)
                     ReceiveCompleted(this, new SocketEventArgs<TOut>(value, SocketAsyncOperation.Receive));
             return value;
-        }
-
-        public IAsyncResult BeginReceive(AsyncCallback callback, object state)
-        {
-            //是否已连接
-            if (!IsConnected)
-                throw new SocketException(10057);
-
-            SocketAsyncResult<TOut> ar = new SocketAsyncResult<TOut>(state);
-            SocketAsyncState asyncState = new SocketAsyncState();
-            asyncState.AsyncCallback = callback;
-            Handler.BeginReceive(HandlerContext, EndBeginReceive, asyncState);
-            return ar;
-        }
-
-        public TOut EndReceive(IAsyncResult ar)
-        {
-            SocketAsyncResult<TOut> asyncResult = ar as SocketAsyncResult<TOut>;
-            if (asyncResult == null)
-                throw new ArgumentException("异步结果不属于该Socket。");
-            return asyncResult.Data;
-        }
-
-        private void EndBeginReceive(IAsyncResult ar)
-        {
-            SocketAsyncState state = (SocketAsyncState)ar.AsyncState;
-            SocketAsyncResult<TOut> asyncResult = (SocketAsyncResult<TOut>)state.AsyncResult;
-            TOut data = Handler.EndReceive(ar);
-            if (data == null)
-            {
-                asyncResult.IsCompleted = false;
-                Task.Run((Func<Task>)DisconnectAsync);
-            }
-            else
-                asyncResult.IsCompleted = true;
-            asyncResult.CompletedSynchronously = ar.CompletedSynchronously;
-            asyncResult.Data = data;
-            if (ReceiveCompleted != null)
-                ReceiveCompleted(this, new SocketEventArgs<TOut>(data, SocketAsyncOperation.Receive));
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-            if (state.AsyncCallback != null)
-                state.AsyncCallback(asyncResult);
         }
 
         public async void ReceiveCycle()

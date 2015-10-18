@@ -11,9 +11,7 @@ namespace Wodsoft.Net.Sockets
     {
         bool Send(byte[] data, SocketFlags flags);
 
-        IAsyncResult BeginSend(byte[] data, SocketFlags flags, AsyncCallback callback, object state);
-
-        bool EndSend(IAsyncResult ar);
+        Task<bool> SendAsync(byte[] data, SocketFlags flags);
 
         event SocketDgramReceiveDelegate Receive;
     }

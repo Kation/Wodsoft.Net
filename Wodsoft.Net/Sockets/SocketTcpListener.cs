@@ -94,7 +94,7 @@ namespace Wodsoft.Net.Sockets
         }
 
         //异步监听结束
-        private void EndAccept(IAsyncResult result)
+        private async void EndAccept(IAsyncResult result)
         {
             Socket clientSocket = null;
 
@@ -112,10 +112,10 @@ namespace Wodsoft.Net.Sockets
             if (clientSocket == null)
                 return;
 
-            BeginGetClient(clientSocket, t =>
+            //实例化客户端类
+            ISocket<TIn, TOut> client = await GetClientAsync(clientSocket);
+            if (client != null)
             {
-                //实例化客户端类
-                ISocket<TIn, TOut> client = EndGetClient(t);
                 //增加事件钩子
                 client.DisconnectCompleted += client_DisconnectCompleted;
 
@@ -126,8 +126,7 @@ namespace Wodsoft.Net.Sockets
                 //客户端连接事件
                 if (AcceptCompleted != null)
                     AcceptCompleted(this, new SocketEventArgs<ISocket<TIn, TOut>>(client, SocketAsyncOperation.Accept));
-                
-            }, null);
+            }
         }
 
         /// <summary>
@@ -147,35 +146,18 @@ namespace Wodsoft.Net.Sockets
             IsStarted = false;
         }
 
-        protected virtual IAsyncResult BeginGetClient(Socket socket, AsyncCallback callback, object state)
+        protected virtual async Task<ISocket<TIn, TOut>> GetClientAsync(Socket socket)
         {
             var client = new SocketTcpClient<TIn, TOut>(socket, Handler, StreamProvider);
-            SocketAsyncResult<SocketTcpClient<TIn, TOut>> asyncResult = new SocketAsyncResult<SocketTcpClient<TIn, TOut>>(state);
-            SocketAsyncState<SocketTcpClient<TIn, TOut>> asyncState = new SocketAsyncState<SocketTcpClient<TIn, TOut>>();
-            asyncState.Data = client;
-            asyncState.AsyncCallback = callback;
-            asyncState.AsyncResult = asyncResult;
-            client.BeginInitialize(ClientInitCallback, asyncState);
-            return asyncResult;
-        }
-
-        private void ClientInitCallback(IAsyncResult ar)
-        {
-            SocketAsyncState<SocketTcpClient<TIn, TOut>> asyncState = (SocketAsyncState<SocketTcpClient<TIn, TOut>>)ar.AsyncState;
-            asyncState.Data.EndInitialize(ar);
-            SocketAsyncResult<SocketTcpClient<TIn, TOut>> asyncResult = (SocketAsyncResult<SocketTcpClient<TIn, TOut>>)asyncState.AsyncResult;
-            asyncResult.Data = asyncState.Data;
-            if (asyncState.AsyncCallback != null)
-                asyncState.AsyncCallback(asyncResult);
-            ((AutoResetEvent)asyncResult.AsyncWaitHandle).Set();
-        }
-
-        protected virtual ISocket<TIn, TOut> EndGetClient(IAsyncResult ar)
-        {
-            SocketAsyncResult<SocketTcpClient<TIn, TOut>> asyncResult = ar as SocketAsyncResult<SocketTcpClient<TIn, TOut>>;
-            if (asyncResult == null)
-                throw new ArgumentException("错误的异步数据。");
-            return asyncResult.Data;
+            try
+            {
+                await client.InitializeAsync();
+            }
+            catch
+            {
+                return null;
+            }
+            return client;
         }
 
         /// <summary>

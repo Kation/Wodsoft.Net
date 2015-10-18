@@ -43,20 +43,7 @@ namespace Wodsoft.Net.Sockets
                 _IsConnected = false;
             });
         }
-
-        public override IAsyncResult BeginDisconnect(AsyncCallback callback, object state)
-        {
-            SocketAsyncResult result = new SocketAsyncResult(state);
-            Disconnect();
-            _IsConnected = false;
-            result.CompletedSynchronously = true;
-            return result;
-        }
-
-        public override void EndDisconnect(IAsyncResult ar)
-        {
-        }
-
+        
         public override IPEndPoint RemoteEndPoint
         {
             get { return Context.RemoteEndPoint; }
